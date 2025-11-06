@@ -1,0 +1,122 @@
+{
+  "name": "aicode-vscode",
+  "displayName": "AICode",
+  "description": "AI-powered coding assistant for VSCode",
+  "version": "0.1.0",
+  "publisher": "aicode",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Machine Learning",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aicode.openChat",
+        "title": "AICode: Open Chat",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "aicode.clearHistory",
+        "title": "AICode: Clear History"
+      },
+      {
+        "command": "aicode.selectModel",
+        "title": "AICode: Select Model"
+      },
+      {
+        "command": "aicode.sendToChat",
+        "title": "AICode: Send Selection to Chat"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "aicode",
+          "title": "AICode",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "aicode": [
+        {
+          "type": "webview",
+          "id": "aicode.chatView",
+          "name": "Chat"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AICode",
+      "properties": {
+        "aicode.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Path to Python interpreter"
+        },
+        "aicode.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to aicode CLI (leave empty to use system path)"
+        },
+        "aicode.autoSendContext": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically send current file context with chat messages"
+        },
+        "aicode.maxContextFiles": {
+          "type": "number",
+          "default": 3,
+          "description": "Maximum number of files to include in context"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "aicode.openChat",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
+      },
+      {
+        "command": "aicode.sendToChat",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
+        "when": "editorHasSelection"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "aicode.sendToChat",
+          "when": "editorHasSelection",
+          "group": "aicode"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.0",
+    "eslint": "^8.41.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {}
+}
