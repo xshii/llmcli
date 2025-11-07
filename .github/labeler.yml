@@ -1,0 +1,38 @@
+# Label PRs based on file changes
+
+'type: documentation':
+  - '**/*.md'
+  - 'docs/**/*'
+
+'type: tests':
+  - 'tests/**/*'
+  - '**/*test*.py'
+
+'type: dependencies':
+  - 'requirements.txt'
+  - 'setup.py'
+  - 'pyproject.toml'
+
+'area: cli':
+  - 'aicode/cli/**/*'
+
+'area: llm':
+  - 'aicode/llm/**/*'
+
+'area: database':
+  - 'aicode/database/**/*'
+
+'area: config':
+  - 'aicode/config/**/*'
+
+'area: infrastructure':
+  - 'aicode/infrastructure/**/*'
+  - 'aicode/interfaces/**/*'
+
+'type: ci/cd':
+  - '.github/**/*'
+  - '.gitignore'
+
+'type: refactor':
+  - any: ['aicode/**/*']
+    all: ['!tests/**/*', '!**/*.md']

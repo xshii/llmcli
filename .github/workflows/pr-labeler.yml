@@ -1,0 +1,70 @@
+name: PR Labeler
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  label:
+    name: Auto Label PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Label based on files changed
+      uses: actions/labeler@v5
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Label PR size
+      uses: codelytv/pr-size-labeler@v1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        xs_label: 'size/XS'
+        xs_max_size: '10'
+        s_label: 'size/S'
+        s_max_size: '100'
+        m_label: 'size/M'
+        m_max_size: '500'
+        l_label: 'size/L'
+        l_max_size: '1000'
+        xl_label: 'size/XL'
+        fail_if_xl: 'false'
+
+    - name: Add review request comment
+      if: github.event.action == 'opened'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data: pr } = await github.rest.pulls.get({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: context.issue.number
+          });
+
+          const comment = `👋 Thanks for opening this PR!
+
+          **Automated checks:**
+          - CI tests will run automatically
+          - Code coverage report will be generated
+          - Linting checks will be performed
+
+          Please ensure:
+          - [ ] All tests pass
+          - [ ] Code is properly formatted
+          - [ ] Documentation is updated if needed
+          - [ ] Commit messages follow conventions
+          `;
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body: comment
+          });
