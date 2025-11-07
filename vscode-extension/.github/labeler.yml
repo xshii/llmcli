@@ -1,0 +1,48 @@
+# Auto-label PRs based on file changes
+
+# Type labels
+'type: documentation':
+  - changed-files:
+    - any-glob-to-any-file: ['**/*.md', 'vscode-extension/**/*.md']
+
+'type: dependencies':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'vscode-extension/package.json'
+      - 'vscode-extension/package-lock.json'
+
+'type: config':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'vscode-extension/tsconfig.json'
+      - 'vscode-extension/.vscodeignore'
+      - 'vscode-extension/.eslintrc.*'
+
+# Area labels
+'area: ui':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'vscode-extension/src/chatPanel.ts'
+      - 'vscode-extension/resources/**/*'
+
+'area: rpc':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'vscode-extension/src/rpcClient.ts'
+
+'area: extension':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'vscode-extension/src/extension.ts'
+      - 'vscode-extension/package.json'
+
+'area: diff':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'vscode-extension/src/diffManager.ts'
+
+# CI/CD
+'area: ci':
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'vscode-extension/.github/**/*'

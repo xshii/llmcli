@@ -1,0 +1,77 @@
+name: PR Labeler
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    name: Label PR
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Label PR by files
+      uses: actions/labeler@v5
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        configuration-path: .github/labeler.yml
+        sync-labels: true
+
+    - name: Label PR by size
+      uses: codelytv/pr-size-labeler@v1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        xs_label: 'size/XS'
+        xs_max_size: '10'
+        s_label: 'size/S'
+        s_max_size: '100'
+        m_label: 'size/M'
+        m_max_size: '500'
+        l_label: 'size/L'
+        l_max_size: '1000'
+        xl_label: 'size/XL'
+        message_if_xl: 'This PR is very large. Consider breaking it into smaller PRs.'
+
+  comment:
+    name: Add PR Comment
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+
+    steps:
+    - name: Add welcome comment
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const comment = `## 👋 Thanks for opening this PR!
+
+          ### 📋 Checklist
+
+          - [ ] Code compiles without errors (\`npm run compile\`)
+          - [ ] Linting passes (\`npm run lint\`)
+          - [ ] Type checking passes (\`npx tsc --noEmit\`)
+          - [ ] Extension packages successfully (\`vsce package\`)
+          - [ ] Tested in VSCode extension host (F5)
+          - [ ] Updated CHANGELOG.md if needed
+          - [ ] Updated README.md if needed
+
+          ### 🔍 Review Tips
+
+          - Check the **Files changed** tab for detailed changes
+          - CI checks must pass before merging
+          - Consider testing the extension locally
+
+          Happy coding! 🚀`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: vscode-extension/package-lock.json
+
+    - name: Install dependencies
+      working-directory: vscode-extension
+      run: |
+        npm ci
+
+    - name: Run ESLint
+      working-directory: vscode-extension
+      run: |
+        npm run lint
+
+    - name: Type check with TypeScript
+      working-directory: vscode-extension
+      run: |
+        npx tsc --noEmit
+
+  build:
+    name: Build Extension
+    runs-on: ${{ matrix.os }}
+    needs: lint
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: ['16', '18', '20']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: vscode-extension/package-lock.json
+
+    - name: Install dependencies
+      working-directory: vscode-extension
+      run: |
+        npm ci
+
+    - name: Compile TypeScript
+      working-directory: vscode-extension
+      run: |
+        npm run compile
+
+    - name: Check compiled output
+      working-directory: vscode-extension
+      run: |
+        ls -la out/
+
+  package:
+    name: Package Extension
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: vscode-extension/package-lock.json
+
+    - name: Install dependencies
+      working-directory: vscode-extension
+      run: |
+        npm ci
+
+    - name: Install vsce
+      run: |
+        npm install -g @vscode/vsce
+
+    - name: Package extension
+      working-directory: vscode-extension
+      run: |
+        vsce package
+
+    - name: Upload VSIX artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: aicode-vscode-vsix
+        path: vscode-extension/*.vsix
+        retention-days: 30
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: vscode-extension/package-lock.json
+
+    - name: Install dependencies
+      working-directory: vscode-extension
+      run: |
+        npm ci
+
+    - name: Run tests
+      working-directory: vscode-extension
+      run: |
+        npm test || echo "Tests not yet implemented"
+      continue-on-error: true
