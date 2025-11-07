@@ -30,6 +30,8 @@ jobs:
         pip install -r requirements.txt
 
     - name: Run unit tests
+      env:
+        SKIP_NETWORK_TESTS: "true"
       run: |
         pytest tests/unit/ -v --cov=aicode --cov-report=xml --cov-report=term-missing
 
