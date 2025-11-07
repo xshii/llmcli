@@ -1,13 +1,13 @@
 """
 chat 命令 - 与LLM对话
+重构后使用依赖注入，遵循依赖倒置原则
 """
 import argparse
 from typing import Optional
-from aicode.config.config_manager import ConfigManager
 from aicode.llm.client import LLMClient
 from aicode.cli.utils.file_ops import FileOperations
 from aicode.cli.utils.output import Output
-from aicode.utils.paths import get_db_manager
+from aicode.infrastructure.di_container import get_container
 from aicode.llm.exceptions import ModelNotFoundError, APIError
 from aicode.utils.logger import get_logger
 
@@ -77,18 +77,22 @@ def execute(args: argparse.Namespace) -> int:
         int: 退出码（0表示成功）
     """
     try:
+        # 使用依赖注入获取仓储
+        container = get_container()
+        config_repo = container.get_config_repository()
+        model_repo = container.get_model_repository()
+
         # 加载配置
-        config_manager = ConfigManager()
-        if not config_manager.config_exists():
+        if not config_repo.config_exists():
             Output.print_error(
                 "Config not found. Please run 'aicode init' first."
             )
             return 1
 
-        config_manager.load()
+        config_repo.load()
 
         # 确定使用的模型
-        model_name = args.model or config_manager.get('global.default_model')
+        model_name = args.model or config_repo.get('global.default_model')
         if not model_name:
             Output.print_error(
                 "No model specified. Use --model or set default_model in config."
@@ -96,17 +100,16 @@ def execute(args: argparse.Namespace) -> int:
             return 1
 
         # 从数据库加载模型
-        db = DatabaseManager(DEFAULT_DB_PATH)
         try:
-            model = db.get_model(model_name)
+            model = model_repo.get_model(model_name)
         except ModelNotFoundError:
             Output.print_error(f"Model '{model_name}' not found in database.")
             Output.print_info("Available models: aicode model list")
             return 1
 
         # 获取API配置
-        api_key = config_manager.get('global.api_key') or model.api_key
-        api_url = config_manager.get('global.api_url') or model.api_url
+        api_key = config_repo.get('global.api_key') or model.api_key
+        api_url = config_repo.get('global.api_url') or model.api_url
 
         if not api_key:
             Output.print_error("API key not configured.")

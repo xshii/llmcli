@@ -1,10 +1,9 @@
 """
 probe 命令 - 探测模型格式支持并更新数据库
+重构后使用依赖注入，遵循依赖倒置原则
 """
 import argparse
-from aicode.database.db_manager import DatabaseManager
-from aicode.config.config_manager import ConfigManager
-from aicode.utils.paths import get_db_path
+from aicode.infrastructure.di_container import get_container
 from aicode.llm.model_probe import probe_model
 from aicode.cli.utils.output import Output
 from aicode.utils.logger import get_logger
@@ -73,22 +72,24 @@ def execute(args: argparse.Namespace) -> int:
         int: 退出码
     """
     try:
+        # 使用依赖注入获取仓储
+        container = get_container()
+        config_repo = container.get_config_repository()
+        model_repo = container.get_model_repository()
+
         # 加载配置
-        config_manager = ConfigManager()
-        if not config_manager.config_exists():
+        if not config_repo.config_exists():
             Output.print_error("Config not found. Run 'aicode config init' first.")
             return 1
 
-        config_manager.load()
+        config_repo.load()
 
         # 加载模型
-        db_path = get_db_path(config_manager)
-        db_manager = DatabaseManager(db_path)
-        model = db_manager.get_model(args.model)
+        model = model_repo.get_model(args.model)
 
         # 获取 API 配置
-        api_key = args.api_key or config_manager.get('global.api_key') or model.api_key
-        api_url = args.api_url or config_manager.get('global.api_url') or model.api_url
+        api_key = args.api_key or config_repo.get('global.api_key') or model.api_key
+        api_url = args.api_url or config_repo.get('global.api_url') or model.api_url
 
         if not api_key:
             Output.print_error("API key not configured")
@@ -161,7 +162,7 @@ def execute(args: argparse.Namespace) -> int:
             Output.print_separator()
 
             try:
-                db_manager.update_model(
+                model_repo.update_model(
                     model.name,
                     vscode_friendly=result['vscode_friendly']
                 )

@@ -1,10 +1,11 @@
 """
 model 命令 - 管理LLM模型
+重构后使用依赖注入，遵循依赖倒置原则
 """
 import argparse
 from aicode.models.schema import ModelSchema
 from aicode.cli.utils.output import Output
-from aicode.utils.paths import get_db_manager
+from aicode.infrastructure.di_container import get_container
 from aicode.llm.exceptions import ModelNotFoundError, ModelAlreadyExistsError
 from aicode.utils.logger import get_logger
 
@@ -67,14 +68,16 @@ def setup_parser(subparsers) -> argparse.ArgumentParser:
 def execute_list(args: argparse.Namespace) -> int:
     """列出所有模型"""
     try:
-        db = get_db_manager()
+        # 使用依赖注入获取仓储
+        container = get_container()
+        model_repo = container.get_model_repository()
 
         # 构建筛选条件
         filters = {}
         if args.provider:
             filters['provider'] = args.provider
 
-        models = db.query_models(filters if filters else None)
+        models = model_repo.query_models(filters if filters else None)
 
         if not models:
             Output.print_warning("No models found.")
@@ -107,7 +110,9 @@ def execute_list(args: argparse.Namespace) -> int:
 def execute_add(args: argparse.Namespace) -> int:
     """添加新模型"""
     try:
-        db = get_db_manager()
+        # 使用依赖注入获取仓储
+        container = get_container()
+        model_repo = container.get_model_repository()
 
         # 创建模型
         model = ModelSchema(
@@ -121,7 +126,7 @@ def execute_add(args: argparse.Namespace) -> int:
             api_url=args.api_url
         )
 
-        db.insert_model(model)
+        model_repo.insert_model(model)
         Output.print_success(f"Added model: {args.name}")
         return 0
 
@@ -137,14 +142,16 @@ def execute_add(args: argparse.Namespace) -> int:
 def execute_remove(args: argparse.Namespace) -> int:
     """删除模型"""
     try:
-        db = get_db_manager()
+        # 使用依赖注入获取仓储
+        container = get_container()
+        model_repo = container.get_model_repository()
 
         # 确认删除
         if not Output.confirm(f"Remove model '{args.name}'?"):
             Output.print_info("Cancelled.")
             return 0
 
-        db.delete_model(args.name)
+        model_repo.delete_model(args.name)
         Output.print_success(f"Removed model: {args.name}")
         return 0
 
@@ -160,8 +167,10 @@ def execute_remove(args: argparse.Namespace) -> int:
 def execute_show(args: argparse.Namespace) -> int:
     """显示模型详情"""
     try:
-        db = get_db_manager()
-        model = db.get_model(args.name)
+        # 使用依赖注入获取仓储
+        container = get_container()
+        model_repo = container.get_model_repository()
+        model = model_repo.get_model(args.name)
 
         Output.print_header(f"Model: {model.name}")
 

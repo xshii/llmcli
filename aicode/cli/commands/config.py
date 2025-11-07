@@ -1,8 +1,9 @@
 """
 config 命令 - 管理配置
+重构后使用依赖注入，遵循依赖倒置原则
 """
 import argparse
-from aicode.config.config_manager import ConfigManager
+from aicode.infrastructure.di_container import get_container
 from aicode.cli.utils.output import Output
 from aicode.llm.exceptions import ConfigFileNotFoundError
 from aicode.utils.logger import get_logger
@@ -54,15 +55,17 @@ def setup_parser(subparsers) -> argparse.ArgumentParser:
 def execute_get(args: argparse.Namespace) -> int:
     """获取配置值"""
     try:
-        cm = ConfigManager()
+        # 使用依赖注入获取仓储
+        container = get_container()
+        config_repo = container.get_config_repository()
 
-        if not cm.config_exists():
+        if not config_repo.config_exists():
             Output.print_error("Config file not found.")
             Output.print_info("Initialize with: aicode config init")
             return 1
 
-        cm.load()
-        value = cm.get(args.key)
+        config_repo.load()
+        value = config_repo.get(args.key)
 
         if value is None:
             Output.print_warning(f"Key '{args.key}' not found.")
@@ -85,15 +88,20 @@ def execute_get(args: argparse.Namespace) -> int:
 def execute_set(args: argparse.Namespace) -> int:
     """设置配置值"""
     try:
-        cm = ConfigManager()
+        # 使用依赖注入获取仓储
+        container = get_container()
+        config_repo = container.get_config_repository()
 
-        if not cm.config_exists():
+        if not config_repo.config_exists():
             Output.print_warning("Config file not found, creating default config...")
+            # 需要直接访问底层 ConfigManager 来创建默认配置
+            from aicode.config.config_manager import ConfigManager
+            cm = ConfigManager()
             cm.create_default_config()
 
-        cm.load()
-        cm.set(args.key, args.value)
-        cm.save()
+        config_repo.load()
+        config_repo.set(args.key, args.value)
+        config_repo.save()
 
         Output.print_success(f"Set {args.key} = {args.value}")
         return 0
@@ -107,19 +115,21 @@ def execute_set(args: argparse.Namespace) -> int:
 def execute_show(args: argparse.Namespace) -> int:
     """显示所有配置"""
     try:
-        cm = ConfigManager()
+        # 使用依赖注入获取仓储
+        container = get_container()
+        config_repo = container.get_config_repository()
 
-        if not cm.config_exists():
+        if not config_repo.config_exists():
             Output.print_error("Config file not found.")
             Output.print_info("Initialize with: aicode config init")
             return 1
 
-        cm.load()
+        config_repo.load()
 
         Output.print_header("Configuration")
 
         # 隐藏敏感信息
-        config_copy = _mask_sensitive_values(cm.config.copy())
+        config_copy = _mask_sensitive_values(config_repo.get_all().copy())
 
         Output.print_dict(config_copy)
         return 0
@@ -133,13 +143,18 @@ def execute_show(args: argparse.Namespace) -> int:
 def execute_init(args: argparse.Namespace) -> int:
     """初始化默认配置"""
     try:
-        cm = ConfigManager()
+        # 使用依赖注入获取仓储
+        container = get_container()
+        config_repo = container.get_config_repository()
 
-        if cm.config_exists():
+        if config_repo.config_exists():
             if not Output.confirm("Config file already exists. Overwrite?"):
                 Output.print_info("Cancelled.")
                 return 0
 
+        # 需要直接访问底层 ConfigManager 来创建默认配置和获取路径
+        from aicode.config.config_manager import ConfigManager
+        cm = ConfigManager()
         cm.create_default_config()
         Output.print_success(f"Created config file at: {cm.config_path}")
         Output.print_info("Set your API key with: aicode config set global.api_key YOUR_KEY")
