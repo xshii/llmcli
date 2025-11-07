@@ -5,7 +5,7 @@ import argparse
 from aicode.database.db_manager import DatabaseManager
 from aicode.config.config_manager import ConfigManager
 from aicode.utils.paths import get_db_path
-from aicode.llm.model_probe import probe_model
+from aicode.llm.model_probe import probe_model_full
 from aicode.cli.utils.output import Output
 from aicode.utils.logger import get_logger
 
@@ -101,9 +101,9 @@ def execute(args: argparse.Namespace) -> int:
         print(f"API URL: {api_url or 'default'}")
         print()
 
-        # 执行探测
-        Output.print_info("Sending test request...")
-        result = probe_model(model, api_key, api_url)
+        # 执行完整探测
+        Output.print_info("Testing model capabilities...")
+        result = probe_model_full(model, api_key, api_url)
 
         # 显示结果
         Output.print_separator()
@@ -114,19 +114,35 @@ def execute(args: argparse.Namespace) -> int:
             Output.print_error(f"Probe failed: {result.get('error', 'Unknown error')}")
             return 1
 
+        # Function Calling 支持
+        if result.get('supports_function_calling'):
+            Output.print_success("✓ Function Calling: YES")
+        else:
+            print("✗ Function Calling: NO")
+
+        # XML 格式支持
+        if result.get('supports_xml_format'):
+            Output.print_success(f"✓ XML Format: YES (edits: {result.get('edits_count', 0)})")
+
+            # 污染检测
+            if result.get('has_pollution'):
+                Output.print_warning(f"  └─ Pollution: {', '.join(result.get('pollution_types', []))} (auto-cleaning enabled)")
+        else:
+            print("✗ XML Format: NO")
+
+        # JSON Mode 支持
+        if result.get('supports_json_mode'):
+            Output.print_success("✓ JSON Mode: YES")
+        else:
+            print("✗ JSON Mode: NO")
+
+        print()
+
         # VSCode 友好度
-        if result['vscode_friendly']:
-            Output.print_success("VSCode Friendly: YES")
+        if result.get('vscode_friendly'):
+            Output.print_success("Overall: VSCode Friendly ✓")
         else:
-            Output.print_warning("VSCode Friendly: NO")
-
-        print(f"  Edits Parsed: {result['edits_count']}")
-
-        # 污染检测
-        if result['has_pollution']:
-            Output.print_warning(f"  Pollution: {', '.join(result['pollution_types'])} (auto-cleaning enabled)")
-        else:
-            print(f"  Pollution: None")
+            Output.print_warning("Overall: May not be VSCode friendly")
 
         # 详细输出
         if args.verbose:
@@ -141,18 +157,17 @@ def execute(args: argparse.Namespace) -> int:
         Output.print_bold("Recommendations")
         Output.print_separator()
 
-        if result['vscode_friendly']:
-            Output.print_success("This model is suitable for VSCode integration")
-            print("You can safely use it with code editing features")
+        if result.get('supports_function_calling'):
+            Output.print_success("Recommended: Use UnifiedAgent with Function Calling mode")
+            print("This model has native FC support, providing the best experience")
+        elif result.get('supports_xml_format'):
+            Output.print_info("Recommended: Use UnifiedAgent with Prompt Engineering mode")
+            print("This model supports XML format for code editing")
+            if result.get('has_pollution'):
+                print("Note: Auto-cleaning is enabled for pollution tags")
         else:
-            Output.print_warning("This model may not reliably follow code edit format")
-            print()
-            if result['edits_count'] == 0:
-                print("Issue: No parseable edits returned")
-                print("  → Try adjusting system prompt or use a different model")
-            if result['has_pollution']:
-                print(f"Issue: Pollution detected ({', '.join(result['pollution_types'])})")
-                print("  → Auto-cleaning is enabled but may affect reliability")
+            Output.print_warning("This model may not be suitable for code editing")
+            print("Consider using a different model or adjusting prompts")
 
         # 更新数据库
         if not args.no_update:
@@ -161,12 +176,19 @@ def execute(args: argparse.Namespace) -> int:
             Output.print_separator()
 
             try:
-                db_manager.update_model(
-                    model.name,
-                    vscode_friendly=result['vscode_friendly']
-                )
+                updates = {
+                    'vscode_friendly': result.get('vscode_friendly', False),
+                    'supports_function_calling': result.get('supports_function_calling', False),
+                    'supports_xml_format': result.get('supports_xml_format', False),
+                    'supports_json_mode': result.get('supports_json_mode', False)
+                }
+
+                db_manager.update_model(model.name, updates)
                 Output.print_success(f"Updated {model.name}:")
-                print(f"  vscode_friendly: {model.vscode_friendly} → {result['vscode_friendly']}")
+                print(f"  vscode_friendly: {model.vscode_friendly} → {updates['vscode_friendly']}")
+                print(f"  supports_function_calling: → {updates['supports_function_calling']}")
+                print(f"  supports_xml_format: → {updates['supports_xml_format']}")
+                print(f"  supports_json_mode: → {updates['supports_json_mode']}")
             except Exception as e:
                 Output.print_error(f"Failed to update database: {e}")
                 logger.exception("Error updating database")
@@ -174,7 +196,11 @@ def execute(args: argparse.Namespace) -> int:
         else:
             Output.print_separator()
             Output.print_info("Skipping database update (--no-update flag)")
-            print(f"  Would set: {model.name}.vscode_friendly = {result['vscode_friendly']}")
+            print(f"  Would update:")
+            print(f"    vscode_friendly = {result.get('vscode_friendly', False)}")
+            print(f"    supports_function_calling = {result.get('supports_function_calling', False)}")
+            print(f"    supports_xml_format = {result.get('supports_xml_format', False)}")
+            print(f"    supports_json_mode = {result.get('supports_json_mode', False)}")
 
         print()
         return 0

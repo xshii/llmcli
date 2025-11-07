@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS models (
     specialties TEXT,
     notes TEXT,
     vscode_friendly INTEGER DEFAULT 1,
+    supports_function_calling INTEGER DEFAULT 0,
+    supports_xml_format INTEGER DEFAULT 0,
+    supports_json_mode INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -48,6 +51,9 @@ class ModelSchema:
     specialties: Optional[List[str]] = None
     notes: Optional[str] = None
     vscode_friendly: bool = True  # 是否能很好地遵循代码编辑格式要求
+    supports_function_calling: bool = False  # 是否支持 Function Calling
+    supports_xml_format: bool = False  # 是否支持 XML 格式（Prompt Engineering）
+    supports_json_mode: bool = False  # 是否支持 JSON Mode
 
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典（用于数据库存储）"""
