@@ -3,6 +3,7 @@ LLM API 客户端
 """
 from typing import List, Dict, Any, Optional, Iterator
 import json
+import requests
 from aicode.models.schema import ModelSchema
 from aicode.llm.token_manager import TokenManager
 from aicode.llm.exceptions import APIError, APIConnectionError, APITimeoutError
@@ -18,27 +19,36 @@ class LLMClient:
         self,
         model: ModelSchema,
         api_key: Optional[str] = None,
-        api_url: Optional[str] = None
+        api_url: Optional[str] = None,
+        timeout: int = 30
     ):
         """
         初始化LLM客户端
 
         Args:
             model: 模型Schema
-            api_key: API密钥（优先级高于model中的配置）
+            api_key: API密钥（优先级高于model中的配置，本地服务如Ollama可选）
             api_url: API地址（优先级高于model中的配置）
+            timeout: 请求超时时间（秒）
         """
         self.model = model
         self.api_key = api_key or model.api_key
         self.api_url = api_url or model.api_url
+        self.timeout = timeout
 
-        if not self.api_key:
-            raise APIError("API key is required")
+        # API URL 是必需的
         if not self.api_url:
             raise APIError("API URL is required")
 
+        # 对于本地服务（如 Ollama），API key 不是必需的
+        is_local = self.api_url.startswith("http://localhost") or \
+                   self.api_url.startswith("http://127.0.0.1")
+
+        if not self.api_key and not is_local:
+            raise APIError("API key is required for non-local services")
+
         self.token_manager = TokenManager(model_name=model.name)
-        logger.info(f"LLMClient initialized for model: {model.name}")
+        logger.info(f"LLMClient initialized for model: {model.name}, URL: {self.api_url}")
 
     def chat(
         self,
@@ -109,22 +119,80 @@ class LLMClient:
 
     def _make_request(self, payload: Dict[str, Any]) -> str:
         """
-        发送HTTP请求（简化版）
-
-        实际实现应该使用 httpx 或 openai SDK
+        发送HTTP请求到 OpenAI 兼容的 API
 
         Args:
             payload: 请求payload
 
         Returns:
             str: 响应内容
-        """
-        # TODO: 实际实现需要使用 httpx 发送 POST 请求
-        # 这里返回模拟响应，用于测试
-        logger.debug("Making HTTP request to LLM API")
 
-        # 模拟响应（实际应该调用真实API）
-        return "This is a mock response. Implement with httpx or openai SDK."
+        Raises:
+            APIConnectionError: 连接失败
+            APITimeoutError: 请求超时
+            APIError: API 返回错误
+        """
+        # 构建请求 URL（兼容 OpenAI 和 Ollama）
+        # Ollama: http://localhost:11434/api/chat
+        # OpenAI: https://api.openai.com/v1/chat/completions
+        if "localhost" in self.api_url or "127.0.0.1" in self.api_url:
+            # Ollama 格式
+            url = f"{self.api_url.rstrip('/')}/api/chat"
+            # 转换为 Ollama 格式
+            ollama_payload = {
+                "model": payload["model"],
+                "messages": payload["messages"],
+                "stream": payload.get("stream", False)
+            }
+            if "temperature" in payload:
+                ollama_payload["temperature"] = payload["temperature"]
+            if "max_tokens" in payload:
+                ollama_payload["max_tokens"] = payload["max_tokens"]
+
+            headers = {"Content-Type": "application/json"}
+            request_payload = ollama_payload
+        else:
+            # OpenAI 格式
+            url = f"{self.api_url.rstrip('/')}/chat/completions"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}"
+            }
+            request_payload = payload
+
+        logger.debug(f"Making HTTP request to: {url}")
+
+        try:
+            response = requests.post(
+                url,
+                json=request_payload,
+                headers=headers,
+                timeout=self.timeout
+            )
+
+            if response.status_code != 200:
+                error_msg = f"API returned status {response.status_code}: {response.text}"
+                logger.error(error_msg)
+                raise APIError(error_msg)
+
+            # 解析响应
+            result = response.json()
+
+            # Ollama 格式响应
+            if "message" in result:
+                return result["message"]["content"]
+            # OpenAI 格式响应
+            elif "choices" in result and len(result["choices"]) > 0:
+                return result["choices"][0]["message"]["content"]
+            else:
+                raise APIError(f"Unexpected response format: {result}")
+
+        except requests.exceptions.Timeout:
+            raise APITimeoutError(f"Request timeout after {self.timeout}s")
+        except requests.exceptions.ConnectionError as e:
+            raise APIConnectionError(f"Connection failed: {e}")
+        except requests.exceptions.RequestException as e:
+            raise APIError(f"Request failed: {e}")
 
     def count_message_tokens(self, messages: List[Dict[str, str]]) -> int:
         """

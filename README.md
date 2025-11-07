@@ -51,6 +51,35 @@ pytest tests/unit/ -v
 pytest tests/unit/ --cov=aicode --cov-report=term-missing
 ```
 
+### 🚀 使用本地 Ollama（推荐用于测试）
+
+在 Apple M4 或其他 Apple Silicon 上运行本地 LLM：
+
+```bash
+# 快速设置脚本（macOS）
+bash scripts/setup_ollama.sh
+
+# 或手动安装
+brew install ollama
+ollama serve
+
+# 下载模型
+ollama pull llama3.2:3b
+
+# 配置 AICode
+python -m aicode.cli.main model add llama3.2:3b ollama \
+  --api-url http://localhost:11434 \
+  --max-input 2048 \
+  --max-output 1024 \
+  --code-score 7.0
+
+# 开始使用
+python -m aicode.cli.main chat "解释 Python 装饰器" --model llama3.2:3b
+```
+
+📖 **详细 Ollama 设置指南**: 查看 [OLLAMA_SETUP.md](OLLAMA_SETUP.md)
+💡 **Ollama 示例代码**: 查看 [examples/ollama_example.py](examples/ollama_example.py)
+
 ### CLI 使用
 
 ```bash
