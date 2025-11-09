@@ -21,9 +21,7 @@ def is_ollama_running():
 
 
 # 如果 Ollama 未运行，跳过所有测试
-pytestmark = pytest.mark.skipif(
-    not is_ollama_running(), reason="Ollama is not running"
-)
+pytestmark = pytest.mark.skipif(not is_ollama_running(), reason="Ollama is not running")
 
 
 class TestOllamaService:
@@ -213,12 +211,18 @@ class TestOllamaDatabase:
         # 添加多个模型
         temp_db.add_model(
             ModelSchema(
-                name="llama2:7b", provider="ollama", is_local=True, api_url="http://localhost:11434/v1"
+                name="llama2:7b",
+                provider="ollama",
+                is_local=True,
+                api_url="http://localhost:11434/v1",
             )
         )
         temp_db.add_model(
             ModelSchema(
-                name="gpt-4", provider="openai", is_local=False, api_url="https://api.openai.com/v1"
+                name="gpt-4",
+                provider="openai",
+                is_local=False,
+                api_url="https://api.openai.com/v1",
             )
         )
 

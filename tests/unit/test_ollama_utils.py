@@ -21,9 +21,7 @@ class TestIsOllamaAvailable:
         mock_get.return_value = mock_response
 
         assert ollama_utils.is_ollama_available() is True
-        mock_get.assert_called_once_with(
-            "http://localhost:11434/api/tags", timeout=2.0
-        )
+        mock_get.assert_called_once_with("http://localhost:11434/api/tags", timeout=2.0)
 
     @patch("aicode.llm.ollama_utils.httpx.get")
     def test_ollama_unavailable(self, mock_get):
@@ -40,9 +38,7 @@ class TestIsOllamaAvailable:
         mock_get.return_value = mock_response
 
         ollama_utils.is_ollama_available(base_url="http://custom:8080")
-        mock_get.assert_called_once_with(
-            "http://custom:8080/api/tags", timeout=2.0
-        )
+        mock_get.assert_called_once_with("http://custom:8080/api/tags", timeout=2.0)
 
 
 class TestListLocalModels:
@@ -55,7 +51,11 @@ class TestListLocalModels:
         mock_response.json.return_value = {
             "models": [
                 {"name": "llama2:13b", "size": 7300000000, "modified_at": "2024-01-01"},
-                {"name": "codellama:7b", "size": 3800000000, "modified_at": "2024-01-02"},
+                {
+                    "name": "codellama:7b",
+                    "size": 3800000000,
+                    "modified_at": "2024-01-02",
+                },
             ]
         }
         mock_get.return_value = mock_response
@@ -249,7 +249,10 @@ class TestGetBuiltinModels:
         models = ollama_utils._get_builtin_models(search="code")
 
         # 应该只返回包含 "code" 的模型
-        assert all("code" in m["name"].lower() or "code" in m["description"].lower() for m in models)
+        assert all(
+            "code" in m["name"].lower() or "code" in m["description"].lower()
+            for m in models
+        )
 
     def test_search_builtin_models_case_insensitive(self):
         """测试大小写不敏感搜索"""

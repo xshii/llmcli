@@ -115,9 +115,7 @@ def delete_model(name: str, base_url: str = OLLAMA_BASE_URL) -> None:
     """
     logger.info(f"Deleting model: {name}")
 
-    response = httpx.delete(
-        f"{base_url}/api/delete", json={"name": name}, timeout=10.0
-    )
+    response = httpx.delete(f"{base_url}/api/delete", json={"name": name}, timeout=10.0)
     response.raise_for_status()
 
     logger.info(f"Model {name} deleted successfully")
@@ -137,9 +135,7 @@ def show_model_info(name: str, base_url: str = OLLAMA_BASE_URL) -> Dict:
     Raises:
         httpx.HTTPStatusError: API 请求失败
     """
-    response = httpx.post(
-        f"{base_url}/api/show", json={"name": name}, timeout=10.0
-    )
+    response = httpx.post(f"{base_url}/api/show", json={"name": name}, timeout=10.0)
     response.raise_for_status()
 
     return response.json()

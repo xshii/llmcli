@@ -48,9 +48,7 @@ def handle_pull(args):
         Output.print_success(f"Model {args.model_name} downloaded successfully")
 
         # 提示用户添加到 aicode
-        Output.print_info(
-            f"\nTo use this model in aicode, add it to the database:"
-        )
+        Output.print_info(f"\nTo use this model in aicode, add it to the database:")
         print(
             f"  aicode model add {args.model_name} ollama "
             f"--api-url http://localhost:11434/v1 --local"
