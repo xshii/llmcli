@@ -17,7 +17,11 @@ htmlcov/
 *.cover
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/settings.json
+!.vscode/keybindings.json
+!.vscode/README.md
 .idea/
 *.swp
 *.swo

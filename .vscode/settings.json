@@ -1,0 +1,64 @@
+{
+    // Python 解释器
+    "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
+
+    // 格式化
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+
+    // Linting
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.mypyEnabled": true,
+
+    // Pylint 配置
+    "python.linting.pylintArgs": [
+        "--rcfile=${workspaceFolder}/.pylintrc"
+    ],
+
+    // Flake8 配置
+    "python.linting.flake8Args": [
+        "--max-line-length=127",
+        "--max-complexity=10",
+        "--select=E9,F63,F7,F82,F401,F841"
+    ],
+
+    // Mypy 配置
+    "python.linting.mypyArgs": [
+        "--ignore-missing-imports",
+        "--show-column-numbers"
+    ],
+
+    // 测试
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+
+    // 编辑器
+    "editor.rulers": [88, 127],
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+
+    // 排除文件
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/venv": true,
+        "**/.venv": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/*.egg-info": true
+    },
+
+    // 文件关联
+    "files.associations": {
+        "*.yml": "yaml",
+        ".pylintrc": "ini"
+    }
+}
