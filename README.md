@@ -34,18 +34,36 @@
 
 ## 快速开始
 
-### 开发环境设置
+### 安装
 
 ```bash
 # 创建虚拟环境
 python3 -m venv venv
 source venv/bin/activate
 
-# 安装依赖
-pip install -r requirements.txt
+# 开发者安装（包括测试、linting 等工具）
+pip install -e .[dev]
 
+# 或仅安装运行时依赖
+pip install -e .
+```
+
+### 开发工作流
+
+```bash
 # 运行测试
 pytest tests/unit/ -v
+
+# 代码格式化
+black aicode tests
+isort aicode tests
+
+# 代码检查
+flake8 aicode
+pylint aicode
+
+# 类型检查
+mypy aicode --ignore-missing-imports
 
 # 查看覆盖率
 pytest tests/unit/ --cov=aicode --cov-report=term-missing
@@ -72,8 +90,6 @@ python -m aicode.cli.main chat "Hello, explain Python decorators"
 # 5. 带文件上下文
 python -m aicode.cli.main chat "Explain this file" --file main.py
 ```
-
-📖 **详细使用指南**: 查看 [CLI_GUIDE.md](CLI_GUIDE.md)
 
 ## 项目结构
 
