@@ -1,0 +1,108 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // ========== 主任务 ==========
+        {
+            "label": "CI: All Static Checks",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Format: Check All",
+                "Lint: Check All"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+
+        // ========== 格式化 ==========
+        {
+            "label": "Format: Check All",
+            "type": "shell",
+            "command": "black --check aicode tests && isort --check-only aicode tests",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Format: Fix All",
+            "type": "shell",
+            "command": "black aicode tests && isort aicode tests",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+
+        // ========== 代码检查 ==========
+        {
+            "label": "Lint: Check All",
+            "type": "shell",
+            "command": "flake8 aicode --count --select=E9,F63,F7,F82 --show-source --statistics && pylint aicode --disable=all --enable=W0613,W0612,E0601,E0602,W0601,W0611,W0614,E1101,E1102 || true",
+            "problemMatcher": {
+                "owner": "python",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.+):(\\d+):(\\d+):\\s+(\\w+):\\s+(.+)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+
+        // ========== 测试 ==========
+        {
+            "label": "Test: Unit Tests",
+            "type": "shell",
+            "command": "pytest tests/unit/ -v",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Test: With Coverage",
+            "type": "shell",
+            "command": "pytest tests/unit/ -v --cov=aicode --cov-report=term-missing",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+
+        // ========== 类型检查 ==========
+        {
+            "label": "Type Check: Mypy",
+            "type": "shell",
+            "command": "mypy aicode --ignore-missing-imports || true",
+            "problemMatcher": {
+                "owner": "python",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.+):(\\d+):\\s+(.+):\\s+(.+)$",
+                    "file": 1,
+                    "line": 2,
+                    "severity": 3,
+                    "message": 4
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        }
+    ]
+}

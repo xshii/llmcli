@@ -1,0 +1,14 @@
+[
+    {
+        "key": "ctrl+shift+t",
+        "command": "workbench.action.tasks.runTask",
+        "args": "CI: All Static Checks",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+shift+f",
+        "command": "workbench.action.tasks.runTask",
+        "args": "CI: Format Fix All",
+        "when": "editorTextFocus"
+    }
+]
