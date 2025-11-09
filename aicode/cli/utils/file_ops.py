@@ -1,9 +1,11 @@
 """
 文件操作工具
 """
+
 import os
-from typing import List, Optional
 from pathlib import Path
+from typing import List, Optional
+
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -36,13 +38,13 @@ class FileOperations:
             raise ValueError(f"Not a file: {file_path}")
 
         try:
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, "r", encoding="utf-8") as f:
                 content = f.read()
             logger.debug(f"Read file: {file_path} ({len(content)} chars)")
             return content
         except UnicodeDecodeError:
             # 尝试其他编码
-            with open(path, 'r', encoding='latin-1') as f:
+            with open(path, "r", encoding="latin-1") as f:
                 content = f.read()
             logger.warning(f"Read file with latin-1 encoding: {file_path}")
             return content
@@ -64,7 +66,7 @@ class FileOperations:
         # 确保父目录存在
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(content)
 
         logger.info(f"Wrote file: {file_path} ({len(content)} chars)")
@@ -94,13 +96,11 @@ class FileOperations:
         Returns:
             str: 扩展名（不含点号）
         """
-        return Path(file_path).suffix.lstrip('.')
+        return Path(file_path).suffix.lstrip(".")
 
     @staticmethod
     def list_files(
-        directory: str,
-        pattern: Optional[str] = None,
-        recursive: bool = False
+        directory: str, pattern: Optional[str] = None, recursive: bool = False
     ) -> List[str]:
         """
         列出目录中的文件
@@ -128,9 +128,9 @@ class FileOperations:
                 files = path.glob(pattern)
         else:
             if recursive:
-                files = path.rglob('*')
+                files = path.rglob("*")
             else:
-                files = path.glob('*')
+                files = path.glob("*")
 
         # 只返回文件，过滤目录
         result = [str(f) for f in files if f.is_file()]
@@ -164,9 +164,7 @@ class FileOperations:
 
     @staticmethod
     def read_file_lines(
-        file_path: str,
-        start_line: Optional[int] = None,
-        end_line: Optional[int] = None
+        file_path: str, start_line: Optional[int] = None, end_line: Optional[int] = None
     ) -> str:
         """
         读取文件的指定行
@@ -193,4 +191,4 @@ class FileOperations:
             end_idx = len(lines)
 
         selected_lines = lines[start_idx:end_idx]
-        return '\n'.join(selected_lines)
+        return "\n".join(selected_lines)

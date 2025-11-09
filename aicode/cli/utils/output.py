@@ -1,8 +1,9 @@
 """
 CLI输出格式化工具
 """
+
 import sys
-from typing import Any, List, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 
 class Output:
@@ -54,9 +55,7 @@ class Output:
                 col_widths[i] = max(col_widths[i], len(str(cell)))
 
         # 打印表头
-        header_line = " | ".join(
-            h.ljust(col_widths[i]) for i, h in enumerate(headers)
-        )
+        header_line = " | ".join(h.ljust(col_widths[i]) for i, h in enumerate(headers))
         print(f"\n{header_line}")
         print("-" * len(header_line))
 
@@ -134,7 +133,7 @@ class Output:
         if not response:
             return default
 
-        return response in ('y', 'yes')
+        return response in ("y", "yes")
 
     @staticmethod
     def prompt(message: str, default: Optional[str] = None) -> str:

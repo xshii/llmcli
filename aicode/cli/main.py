@@ -1,13 +1,15 @@
 """
 AICode CLI - 主入口
 """
-import sys
+
 import argparse
+import sys
 from typing import List, Optional
-from aicode.config.constants import VERSION, PROJECT_NAME
-from aicode.cli.commands import chat, model, config, session, server, probe
+
+from aicode.cli.commands import chat, config, model, probe, server, session
 from aicode.cli.interactive import start_interactive
 from aicode.cli.utils.output import Output
+from aicode.config.constants import PROJECT_NAME, VERSION
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -21,29 +23,23 @@ def create_parser() -> argparse.ArgumentParser:
         ArgumentParser: 主解析器
     """
     parser = argparse.ArgumentParser(
-        prog='aicode',
-        description='AICode - AI-powered coding assistant',
-        epilog=f'Version {VERSION}'
+        prog="aicode",
+        description="AICode - AI-powered coding assistant",
+        epilog=f"Version {VERSION}",
     )
 
     parser.add_argument(
-        '-v', '--version',
-        action='version',
-        version=f'{PROJECT_NAME} {VERSION}'
+        "-v", "--version", action="version", version=f"{PROJECT_NAME} {VERSION}"
     )
 
-    parser.add_argument(
-        '--debug',
-        action='store_true',
-        help='Enable debug logging'
-    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
 
     # 创建子命令
     subparsers = parser.add_subparsers(
-        title='commands',
-        description='Available commands',
-        dest='command',
-        help='Command to execute'
+        title="commands",
+        description="Available commands",
+        dest="command",
+        help="Command to execute",
     )
 
     # 注册各个命令
@@ -56,9 +52,9 @@ def create_parser() -> argparse.ArgumentParser:
 
     # interactive 命令
     interactive_parser = subparsers.add_parser(
-        'interactive',
-        help='Start interactive session',
-        description='Start an interactive chat session (default if no command specified)'
+        "interactive",
+        help="Start interactive session",
+        description="Start an interactive chat session (default if no command specified)",
     )
     interactive_parser.set_defaults(func=lambda args: start_interactive())
 
@@ -81,7 +77,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     # 设置日志级别
     if args.debug:
         import logging
-        logging.getLogger('aicode').setLevel(logging.DEBUG)
+
+        logging.getLogger("aicode").setLevel(logging.DEBUG)
         logger.debug("Debug mode enabled")
 
     # 如果没有指定命令，进入交互模式
@@ -90,7 +87,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     # 执行命令
     try:
-        if hasattr(args, 'func'):
+        if hasattr(args, "func"):
             return args.func(args)
         else:
             parser.print_help()
@@ -111,5 +108,5 @@ def cli_entry():
     sys.exit(main())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

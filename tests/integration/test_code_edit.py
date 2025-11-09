@@ -10,7 +10,7 @@ def test_parse_single_edit():
     print("TEST 1: Parse Single Edit")
     print("=" * 50)
 
-    text = '''
+    text = """
 Here's the fix:
 
 <file_edit path="src/main.py" type="modify" description="Add error handling">
@@ -25,7 +25,7 @@ def main():
 </file_edit>
 
 This should handle errors properly.
-'''
+"""
 
     edits = CodeEditParser.parse(text)
     assert len(edits) == 1, f"Expected 1 edit, got {len(edits)}"
@@ -49,7 +49,7 @@ def test_parse_multiple_edits():
     print("TEST 2: Parse Multiple Edits")
     print("=" * 50)
 
-    text = '''
+    text = """
 I'll help you refactor:
 
 <file_edit path="src/main.py" type="modify" description="Add logging">
@@ -82,7 +82,7 @@ class TestMain(unittest.TestCase):
 </file_edit>
 
 Done!
-'''
+"""
 
     edits = CodeEditParser.parse(text)
     assert len(edits) == 3, f"Expected 3 edits, got {len(edits)}"
@@ -99,7 +99,7 @@ def test_format_edits_display():
     print("TEST 3: Format Edits for Display")
     print("=" * 50)
 
-    text = '''
+    text = """
 <file_edit path="src/main.py" type="modify" description="Fix bug">
 ```python
 def main():
@@ -112,7 +112,7 @@ def main():
 import unittest
 ```
 </file_edit>
-'''
+"""
 
     edits = CodeEditParser.parse(text)
     formatted = CodeEditParser.format_edits_for_display(edits)
@@ -159,26 +159,26 @@ def test_edge_cases():
     print("✓ Empty text handled")
 
     # 缺少 description
-    text2 = '''
+    text2 = """
 <file_edit path="file.py" type="modify">
 ```python
 code
 ```
 </file_edit>
-'''
+"""
     edits2 = CodeEditParser.parse(text2)
     assert len(edits2) == 1
     assert edits2[0].description == ""
     print("✓ Missing description handled")
 
     # 缺少 type
-    text3 = '''
+    text3 = """
 <file_edit path="file.py" description="test">
 ```python
 code
 ```
 </file_edit>
-'''
+"""
     edits3 = CodeEditParser.parse(text3)
     assert len(edits3) == 1
     assert edits3[0].edit_type == "modify"  # 默认值
@@ -192,28 +192,28 @@ def test_to_dict():
     print("TEST 6: Convert to Dict")
     print("=" * 50)
 
-    text = '''
+    text = """
 <file_edit path="src/main.py" type="modify" description="Test">
 ```python
 print("Hello")
 ```
 </file_edit>
-'''
+"""
 
     edits = CodeEditParser.parse(text)
     edit_dict = edits[0].to_dict()
 
-    assert edit_dict['file_path'] == "src/main.py"
-    assert edit_dict['edit_type'] == "modify"
-    assert edit_dict['description'] == "Test"
-    assert edit_dict['new_content'] == 'print("Hello")'
+    assert edit_dict["file_path"] == "src/main.py"
+    assert edit_dict["edit_type"] == "modify"
+    assert edit_dict["description"] == "Test"
+    assert edit_dict["new_content"] == 'print("Hello")'
 
     print("✓ Dict conversion successful")
     print(f"  Keys: {list(edit_dict.keys())}")
     print()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("\n" + "=" * 50)
     print("CODE EDIT PARSER TESTS")
     print("=" * 50 + "\n")
@@ -233,8 +233,10 @@ if __name__ == '__main__':
     except AssertionError as e:
         print(f"\n✗ TEST FAILED: {e}")
         import traceback
+
         traceback.print_exc()
     except Exception as e:
         print(f"\n✗ ERROR: {e}")
         import traceback
+
         traceback.print_exc()

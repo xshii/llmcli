@@ -1,15 +1,17 @@
 """
 交互式会话 - REPL 模式
 """
+
 import sys
-from typing import List, Dict, Optional
-from aicode.database.db_manager import DatabaseManager
-from aicode.config.config_manager import ConfigManager
-from aicode.llm.client import LLMClient
-from aicode.llm.session import SessionManager
+from typing import Dict, List, Optional
+
 from aicode.cli.utils.output import Output
+from aicode.config.config_manager import ConfigManager
 from aicode.config.constants import DEFAULT_DB_PATH, VERSION
-from aicode.llm.exceptions import ModelNotFoundError, APIError
+from aicode.database.db_manager import DatabaseManager
+from aicode.llm.client import LLMClient
+from aicode.llm.exceptions import APIError, ModelNotFoundError
+from aicode.llm.session import SessionManager
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -31,7 +33,9 @@ class InteractiveSession:
 
         # 加载配置
         if not self.config_manager.config_exists():
-            Output.print_error("Config not found. Please run 'aicode config init' first.")
+            Output.print_error(
+                "Config not found. Please run 'aicode config init' first."
+            )
             sys.exit(1)
 
         self.config_manager.load()
@@ -57,7 +61,7 @@ class InteractiveSession:
             model_name: 模型名称
         """
         if not model_name:
-            model_name = self.config_manager.get('global.default_model')
+            model_name = self.config_manager.get("global.default_model")
 
         if not model_name:
             Output.print_error("No model specified.")
@@ -68,15 +72,21 @@ class InteractiveSession:
             self.current_model = self.db_manager.get_model(model_name)
 
             # 获取API配置
-            api_key = self.config_manager.get('global.api_key') or self.current_model.api_key
-            api_url = self.config_manager.get('global.api_url') or self.current_model.api_url
+            api_key = (
+                self.config_manager.get("global.api_key") or self.current_model.api_key
+            )
+            api_url = (
+                self.config_manager.get("global.api_url") or self.current_model.api_url
+            )
 
             if not api_key:
                 Output.print_error("API key not configured.")
                 return False
 
             # 创建客户端
-            self.client = LLMClient(self.current_model, api_key=api_key, api_url=api_url)
+            self.client = LLMClient(
+                self.current_model, api_key=api_key, api_url=api_url
+            )
 
             Output.print_success(f"Using model: {self.current_model.name}")
 
@@ -104,15 +114,15 @@ class InteractiveSession:
         parts = command.split()
         cmd = parts[0].lower()
 
-        if cmd == '/exit' or cmd == '/quit':
+        if cmd == "/exit" or cmd == "/quit":
             return False
 
-        elif cmd == '/help':
+        elif cmd == "/help":
             self.show_help()
 
-        elif cmd == '/model':
+        elif cmd == "/model":
             if len(parts) > 1:
-                if parts[1] == 'list':
+                if parts[1] == "list":
                     self.list_models()
                 else:
                     # 切换模型
@@ -124,23 +134,25 @@ class InteractiveSession:
                 else:
                     Output.print_warning("No model selected")
 
-        elif cmd == '/clear':
+        elif cmd == "/clear":
             self.messages.clear()
             if self.current_session:
                 self.current_session.messages.clear()
             Output.print_success("Conversation cleared")
 
-        elif cmd == '/save':
+        elif cmd == "/save":
             if self.current_session:
                 self.session_manager.save_session(self.current_session)
-                Output.print_success(f"Session saved: {self.current_session.session_id}")
+                Output.print_success(
+                    f"Session saved: {self.current_session.session_id}"
+                )
             else:
                 Output.print_warning("No active session")
 
-        elif cmd == '/history':
+        elif cmd == "/history":
             self.show_history()
 
-        elif cmd == '/info':
+        elif cmd == "/info":
             self.show_info()
 
         else:
@@ -169,14 +181,16 @@ class InteractiveSession:
             Output.print_warning("No models found")
             return
 
-        headers = ['Name', 'Provider', 'Code Score']
+        headers = ["Name", "Provider", "Code Score"]
         rows = []
         for model in models:
-            rows.append([
-                model.name,
-                model.provider,
-                f"{model.code_score:.1f}" if model.code_score else '-'
-            ])
+            rows.append(
+                [
+                    model.name,
+                    model.provider,
+                    f"{model.code_score:.1f}" if model.code_score else "-",
+                ]
+            )
 
         Output.print_table(headers, rows)
 
@@ -188,10 +202,10 @@ class InteractiveSession:
 
         Output.print_separator()
         for msg in self.messages:
-            role = msg['role'].upper()
-            content = msg['content']
+            role = msg["role"].upper()
+            content = msg["content"]
 
-            if role == 'USER':
+            if role == "USER":
                 Output.print_info(f"\n[{role}]")
             else:
                 Output.print_success(f"\n[{role}]")
@@ -229,30 +243,26 @@ class InteractiveSession:
             user_input: 用户输入
         """
         if not self.client or not self.current_model:
-            Output.print_error("No model selected. Use /model <name> to select a model.")
+            Output.print_error(
+                "No model selected. Use /model <name> to select a model."
+            )
             return
 
         # 添加用户消息
-        self.messages.append({
-            'role': 'user',
-            'content': user_input
-        })
+        self.messages.append({"role": "user", "content": user_input})
 
         if self.current_session:
-            self.current_session.add_message('user', user_input)
+            self.current_session.add_message("user", user_input)
 
         try:
             # 发送请求
             response = self.client.chat(self.messages, temperature=0.7)
 
             # 添加助手回复
-            self.messages.append({
-                'role': 'assistant',
-                'content': response
-            })
+            self.messages.append({"role": "assistant", "content": response})
 
             if self.current_session:
-                self.current_session.add_message('assistant', response)
+                self.current_session.add_message("assistant", response)
                 # 自动保存
                 self.session_manager.save_session(self.current_session)
 
@@ -292,7 +302,7 @@ class InteractiveSession:
                         continue
 
                     # 处理特殊命令
-                    if user_input.startswith('/'):
+                    if user_input.startswith("/"):
                         if not self.handle_command(user_input):
                             # 退出命令
                             break

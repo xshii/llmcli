@@ -32,10 +32,4 @@ MIN_SCORE = 0.0
 MAX_SCORE = 10.0
 
 # 模型专长类型
-SPECIALTIES = [
-    "code",
-    "reasoning",
-    "chat",
-    "vision",
-    "multilingual"
-]
+SPECIALTIES = ["code", "reasoning", "chat", "vision", "multilingual"]

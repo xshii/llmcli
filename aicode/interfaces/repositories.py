@@ -2,8 +2,10 @@
 Repository 抽象接口 - 依赖倒置的核心
 遵循依赖倒置原则 (DIP): 高层模块依赖抽象，而非具体实现
 """
+
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from aicode.models.schema import ModelSchema
 
 
@@ -67,7 +69,9 @@ class IModelRepository(ABC):
         pass
 
     @abstractmethod
-    def query_models(self, filters: Optional[Dict[str, Any]] = None) -> List[ModelSchema]:
+    def query_models(
+        self, filters: Optional[Dict[str, Any]] = None
+    ) -> List[ModelSchema]:
         """
         查询模型列表
 

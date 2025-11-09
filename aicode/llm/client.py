@@ -1,11 +1,13 @@
 """
 LLM API 客户端
 """
-from typing import List, Dict, Any, Optional, Iterator
+
 import json
-from aicode.models.schema import ModelSchema
+from typing import Any, Dict, Iterator, List, Optional
+
+from aicode.llm.exceptions import APIConnectionError, APIError, APITimeoutError
 from aicode.llm.token_manager import TokenManager
-from aicode.llm.exceptions import APIError, APIConnectionError, APITimeoutError
+from aicode.models.schema import ModelSchema
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -18,7 +20,7 @@ class LLMClient:
         self,
         model: ModelSchema,
         api_key: Optional[str] = None,
-        api_url: Optional[str] = None
+        api_url: Optional[str] = None,
     ):
         """
         初始化LLM客户端
@@ -45,7 +47,7 @@ class LLMClient:
         messages: List[Dict[str, str]],
         stream: bool = False,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None
+        max_tokens: Optional[int] = None,
     ) -> str:
         """
         发送对话请求
@@ -64,7 +66,7 @@ class LLMClient:
             TokenLimitExceededError: Token超限
         """
         # 计算输入token
-        input_text = '\n'.join([m['content'] for m in messages])
+        input_text = "\n".join([m["content"] for m in messages])
         input_tokens = self.token_manager.count_tokens(input_text)
 
         # 检查限制
@@ -77,25 +79,26 @@ class LLMClient:
                 # 简单截断最后一条消息
                 last_msg = messages[-1]
                 truncated = self.token_manager.truncate_text(
-                    last_msg['content'],
-                    limit - input_tokens + len(last_msg['content'])
+                    last_msg["content"], limit - input_tokens + len(last_msg["content"])
                 )
-                messages[-1]['content'] = truncated
+                messages[-1]["content"] = truncated
 
         # 构建请求
         payload = {
-            'model': self.model.name,
-            'messages': messages,
-            'temperature': temperature,
-            'stream': stream
+            "model": self.model.name,
+            "messages": messages,
+            "temperature": temperature,
+            "stream": stream,
         }
 
         if max_tokens:
-            payload['max_tokens'] = max_tokens
+            payload["max_tokens"] = max_tokens
         elif self.model.max_output_tokens:
-            payload['max_tokens'] = self.model.max_output_tokens
+            payload["max_tokens"] = self.model.max_output_tokens
 
-        logger.debug(f"Sending chat request: {len(messages)} messages, {input_tokens} tokens")
+        logger.debug(
+            f"Sending chat request: {len(messages)} messages, {input_tokens} tokens"
+        )
 
         try:
             # 这里使用简单的实现，实际应该用 httpx 或 openai SDK
@@ -136,13 +139,11 @@ class LLMClient:
         Returns:
             int: token数量
         """
-        text = '\n'.join([m['content'] for m in messages])
+        text = "\n".join([m["content"] for m in messages])
         return self.token_manager.count_tokens(text)
 
     def estimate_cost(
-        self,
-        messages: List[Dict[str, str]],
-        output_tokens: Optional[int] = None
+        self, messages: List[Dict[str, str]], output_tokens: Optional[int] = None
     ) -> Optional[float]:
         """
         估算对话成本
@@ -154,7 +155,7 @@ class LLMClient:
         Returns:
             float: 成本（美元），如果模型无价格信息则返回None
         """
-        text = '\n'.join([m['content'] for m in messages])
+        text = "\n".join([m["content"] for m in messages])
         return self.token_manager.estimate_cost(text, self.model, output_tokens)
 
     def get_model_info(self) -> Dict[str, Any]:
@@ -165,11 +166,11 @@ class LLMClient:
             Dict: 模型信息
         """
         return {
-            'name': self.model.name,
-            'provider': self.model.provider,
-            'max_input_tokens': self.model.max_input_tokens,
-            'max_output_tokens': self.model.max_output_tokens,
-            'context_limit': self.model.get_context_limit(),
-            'code_score': self.model.code_score,
-            'reasoning_score': self.model.reasoning_score,
+            "name": self.model.name,
+            "provider": self.model.provider,
+            "max_input_tokens": self.model.max_input_tokens,
+            "max_output_tokens": self.model.max_output_tokens,
+            "context_limit": self.model.get_context_limit(),
+            "code_score": self.model.code_score,
+            "reasoning_score": self.model.reasoning_score,
         }

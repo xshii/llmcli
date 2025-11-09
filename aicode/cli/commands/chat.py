@@ -2,13 +2,15 @@
 chat 命令 - 与LLM对话
 重构后使用依赖注入，遵循依赖倒置原则
 """
+
 import argparse
 from typing import Optional
-from aicode.llm.client import LLMClient
+
 from aicode.cli.utils.file_ops import FileOperations
 from aicode.cli.utils.output import Output
 from aicode.infrastructure.di_container import get_container
-from aicode.llm.exceptions import ModelNotFoundError, APIError
+from aicode.llm.client import LLMClient
+from aicode.llm.exceptions import APIError, ModelNotFoundError
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -25,42 +27,34 @@ def setup_parser(subparsers) -> argparse.ArgumentParser:
         ArgumentParser: chat命令的解析器
     """
     parser = subparsers.add_parser(
-        'chat',
-        help='Chat with LLM',
-        description='Send a message to the LLM and get a response'
+        "chat",
+        help="Chat with LLM",
+        description="Send a message to the LLM and get a response",
     )
 
     parser.add_argument(
-        'message',
+        "message",
         type=str,
-        nargs='?',
-        help='Message to send (if not provided, enters interactive mode)'
+        nargs="?",
+        help="Message to send (if not provided, enters interactive mode)",
     )
 
     parser.add_argument(
-        '-f', '--file',
-        type=str,
-        help='Include file content in the conversation'
+        "-f", "--file", type=str, help="Include file content in the conversation"
     )
 
     parser.add_argument(
-        '-m', '--model',
-        type=str,
-        help='Model to use (overrides default)'
+        "-m", "--model", type=str, help="Model to use (overrides default)"
     )
 
     parser.add_argument(
-        '--temperature',
+        "--temperature",
         type=float,
         default=0.7,
-        help='Temperature for generation (default: 0.7)'
+        help="Temperature for generation (default: 0.7)",
     )
 
-    parser.add_argument(
-        '--max-tokens',
-        type=int,
-        help='Maximum tokens to generate'
-    )
+    parser.add_argument("--max-tokens", type=int, help="Maximum tokens to generate")
 
     parser.set_defaults(func=execute)
     return parser
@@ -84,15 +78,13 @@ def execute(args: argparse.Namespace) -> int:
 
         # 加载配置
         if not config_repo.config_exists():
-            Output.print_error(
-                "Config not found. Please run 'aicode init' first."
-            )
+            Output.print_error("Config not found. Please run 'aicode init' first.")
             return 1
 
         config_repo.load()
 
         # 确定使用的模型
-        model_name = args.model or config_repo.get('global.default_model')
+        model_name = args.model or config_repo.get("global.default_model")
         if not model_name:
             Output.print_error(
                 "No model specified. Use --model or set default_model in config."
@@ -108,8 +100,8 @@ def execute(args: argparse.Namespace) -> int:
             return 1
 
         # 获取API配置
-        api_key = config_repo.get('global.api_key') or model.api_key
-        api_url = config_repo.get('global.api_url') or model.api_url
+        api_key = config_repo.get("global.api_key") or model.api_key
+        api_url = config_repo.get("global.api_url") or model.api_url
 
         if not api_key:
             Output.print_error("API key not configured.")
@@ -126,10 +118,12 @@ def execute(args: argparse.Namespace) -> int:
         if args.file:
             try:
                 file_content = FileOperations.read_file(args.file)
-                messages.append({
-                    'role': 'user',
-                    'content': f"Here is the content of {args.file}:\n\n```\n{file_content}\n```"
-                })
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": f"Here is the content of {args.file}:\n\n```\n{file_content}\n```",
+                    }
+                )
                 Output.print_info(f"Included file: {args.file}")
             except FileNotFoundError:
                 Output.print_error(f"File not found: {args.file}")
@@ -140,10 +134,7 @@ def execute(args: argparse.Namespace) -> int:
 
         # 添加用户消息
         if args.message:
-            messages.append({
-                'role': 'user',
-                'content': args.message
-            })
+            messages.append({"role": "user", "content": args.message})
         else:
             # 交互模式
             Output.print_info("No message provided, entering interactive mode...")
@@ -154,10 +145,7 @@ def execute(args: argparse.Namespace) -> int:
                     line = input()
                     user_message.append(line)
             except EOFError:
-                messages.append({
-                    'role': 'user',
-                    'content': '\n'.join(user_message)
-                })
+                messages.append({"role": "user", "content": "\n".join(user_message)})
             except KeyboardInterrupt:
                 Output.print_info("\nCancelled.")
                 return 0
@@ -175,9 +163,7 @@ def execute(args: argparse.Namespace) -> int:
         Output.print_separator()
         try:
             response = client.chat(
-                messages,
-                temperature=args.temperature,
-                max_tokens=args.max_tokens
+                messages, temperature=args.temperature, max_tokens=args.max_tokens
             )
 
             # 显示响应

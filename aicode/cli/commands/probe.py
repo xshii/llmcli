@@ -2,10 +2,12 @@
 probe 命令 - 探测模型格式支持并更新数据库
 重构后使用依赖注入，遵循依赖倒置原则
 """
+
 import argparse
+
+from aicode.cli.utils.output import Output
 from aicode.infrastructure.di_container import get_container
 from aicode.llm.model_probe import probe_model
-from aicode.cli.utils.output import Output
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,39 +24,23 @@ def setup_parser(subparsers) -> argparse.ArgumentParser:
         ArgumentParser: probe 命令的解析器
     """
     parser = subparsers.add_parser(
-        'probe',
-        help='Probe model format support',
-        description='Test model format support and update database'
+        "probe",
+        help="Probe model format support",
+        description="Test model format support and update database",
+    )
+
+    parser.add_argument("model", type=str, help="Model name to probe")
+
+    parser.add_argument("--api-key", type=str, help="API key (overrides config)")
+
+    parser.add_argument("--api-url", type=str, help="API URL (overrides config)")
+
+    parser.add_argument(
+        "--no-update", action="store_true", help="Do not update database (dry run)"
     )
 
     parser.add_argument(
-        'model',
-        type=str,
-        help='Model name to probe'
-    )
-
-    parser.add_argument(
-        '--api-key',
-        type=str,
-        help='API key (overrides config)'
-    )
-
-    parser.add_argument(
-        '--api-url',
-        type=str,
-        help='API URL (overrides config)'
-    )
-
-    parser.add_argument(
-        '--no-update',
-        action='store_true',
-        help='Do not update database (dry run)'
-    )
-
-    parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Show detailed output'
+        "--verbose", "-v", action="store_true", help="Show detailed output"
     )
 
     parser.set_defaults(func=execute)
@@ -88,8 +74,8 @@ def execute(args: argparse.Namespace) -> int:
         model = model_repo.get_model(args.model)
 
         # 获取 API 配置
-        api_key = args.api_key or config_repo.get('global.api_key') or model.api_key
-        api_url = args.api_url or config_repo.get('global.api_url') or model.api_url
+        api_key = args.api_key or config_repo.get("global.api_key") or model.api_key
+        api_url = args.api_url or config_repo.get("global.api_url") or model.api_url
 
         if not api_key:
             Output.print_error("API key not configured")
@@ -111,12 +97,12 @@ def execute(args: argparse.Namespace) -> int:
         Output.print_bold("Probe Results")
         Output.print_separator()
 
-        if not result['success']:
+        if not result["success"]:
             Output.print_error(f"Probe failed: {result.get('error', 'Unknown error')}")
             return 1
 
         # VSCode 友好度
-        if result['vscode_friendly']:
+        if result["vscode_friendly"]:
             Output.print_success("VSCode Friendly: YES")
         else:
             Output.print_warning("VSCode Friendly: NO")
@@ -124,8 +110,10 @@ def execute(args: argparse.Namespace) -> int:
         print(f"  Edits Parsed: {result['edits_count']}")
 
         # 污染检测
-        if result['has_pollution']:
-            Output.print_warning(f"  Pollution: {', '.join(result['pollution_types'])} (auto-cleaning enabled)")
+        if result["has_pollution"]:
+            Output.print_warning(
+                f"  Pollution: {', '.join(result['pollution_types'])} (auto-cleaning enabled)"
+            )
         else:
             print(f"  Pollution: None")
 
@@ -134,25 +122,27 @@ def execute(args: argparse.Namespace) -> int:
             Output.print_separator()
             Output.print_bold("Raw Response (first 500 chars)")
             Output.print_separator()
-            raw = result['raw_response']
-            print(raw[:500] + ('...' if len(raw) > 500 else ''))
+            raw = result["raw_response"]
+            print(raw[:500] + ("..." if len(raw) > 500 else ""))
 
         # 建议
         Output.print_separator()
         Output.print_bold("Recommendations")
         Output.print_separator()
 
-        if result['vscode_friendly']:
+        if result["vscode_friendly"]:
             Output.print_success("This model is suitable for VSCode integration")
             print("You can safely use it with code editing features")
         else:
             Output.print_warning("This model may not reliably follow code edit format")
             print()
-            if result['edits_count'] == 0:
+            if result["edits_count"] == 0:
                 print("Issue: No parseable edits returned")
                 print("  → Try adjusting system prompt or use a different model")
-            if result['has_pollution']:
-                print(f"Issue: Pollution detected ({', '.join(result['pollution_types'])})")
+            if result["has_pollution"]:
+                print(
+                    f"Issue: Pollution detected ({', '.join(result['pollution_types'])})"
+                )
                 print("  → Auto-cleaning is enabled but may affect reliability")
 
         # 更新数据库
@@ -163,11 +153,12 @@ def execute(args: argparse.Namespace) -> int:
 
             try:
                 model_repo.update_model(
-                    model.name,
-                    vscode_friendly=result['vscode_friendly']
+                    model.name, vscode_friendly=result["vscode_friendly"]
                 )
                 Output.print_success(f"Updated {model.name}:")
-                print(f"  vscode_friendly: {model.vscode_friendly} → {result['vscode_friendly']}")
+                print(
+                    f"  vscode_friendly: {model.vscode_friendly} → {result['vscode_friendly']}"
+                )
             except Exception as e:
                 Output.print_error(f"Failed to update database: {e}")
                 logger.exception("Error updating database")
@@ -175,7 +166,9 @@ def execute(args: argparse.Namespace) -> int:
         else:
             Output.print_separator()
             Output.print_info("Skipping database update (--no-update flag)")
-            print(f"  Would set: {model.name}.vscode_friendly = {result['vscode_friendly']}")
+            print(
+                f"  Would set: {model.name}.vscode_friendly = {result['vscode_friendly']}"
+            )
 
         print()
         return 0

@@ -1,10 +1,12 @@
 """
 路径工具 - 获取可配置的路径
 """
+
 import os
 from pathlib import Path
 from typing import Optional
-from aicode.config.constants import DEFAULT_DB_PATH, DEFAULT_CONFIG_DIR
+
+from aicode.config.constants import DEFAULT_CONFIG_DIR, DEFAULT_DB_PATH
 
 
 def get_db_path(config_manager=None) -> str:
@@ -23,14 +25,14 @@ def get_db_path(config_manager=None) -> str:
         str: 数据库路径
     """
     # 1. 环境变量
-    env_path = os.environ.get('AICODE_DB_PATH')
+    env_path = os.environ.get("AICODE_DB_PATH")
     if env_path:
         return env_path
 
     # 2. 配置文件
     if config_manager and config_manager.config_exists():
         try:
-            config_path = config_manager.get('database.path')
+            config_path = config_manager.get("database.path")
             if config_path:
                 return config_path
         except:
@@ -51,7 +53,7 @@ def get_config_dir() -> str:
     Returns:
         str: 配置目录路径
     """
-    env_dir = os.environ.get('AICODE_CONFIG_DIR')
+    env_dir = os.environ.get("AICODE_CONFIG_DIR")
     if env_dir:
         return env_dir
 
@@ -89,8 +91,8 @@ def get_db_manager():
     Returns:
         DatabaseManager: 数据库管理器
     """
-    from aicode.database.db_manager import DatabaseManager
     from aicode.config.config_manager import ConfigManager
+    from aicode.database.db_manager import DatabaseManager
 
     try:
         config_manager = ConfigManager()

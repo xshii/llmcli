@@ -1,10 +1,11 @@
 """
 数据模型定义
 """
-from dataclasses import dataclass, asdict
-from typing import Optional, List, Dict, Any
-from aicode.config.constants import MIN_SCORE, MAX_SCORE, TOKEN_BUFFER_RATIO
 
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Optional
+
+from aicode.config.constants import MAX_SCORE, MIN_SCORE, TOKEN_BUFFER_RATIO
 
 # SQLite 表结构
 CREATE_MODELS_TABLE = """
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS models (
 @dataclass
 class ModelSchema:
     """模型数据类"""
+
     name: str
     provider: str
     api_key: Optional[str] = None
@@ -54,18 +56,20 @@ class ModelSchema:
         data = asdict(self)
         # 将列表转为逗号分隔的字符串
         if self.specialties:
-            data['specialties'] = ','.join(self.specialties)
+            data["specialties"] = ",".join(self.specialties)
         else:
-            data['specialties'] = None
+            data["specialties"] = None
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ModelSchema':
+    def from_dict(cls, data: Dict[str, Any]) -> "ModelSchema":
         """从字典创建实例（从数据库读取）"""
         data = data.copy()
         # 将逗号分隔的字符串转为列表
-        if data.get('specialties') and isinstance(data['specialties'], str):
-            data['specialties'] = [s.strip() for s in data['specialties'].split(',') if s.strip()]
+        if data.get("specialties") and isinstance(data["specialties"], str):
+            data["specialties"] = [
+                s.strip() for s in data["specialties"].split(",") if s.strip()
+            ]
         return cls(**data)
 
     def get_context_limit(self) -> Optional[int]:
@@ -99,7 +103,7 @@ def row_to_model(row: Any) -> ModelSchema:
     将数据库行转换为 ModelSchema
     支持 dict 或 sqlite3.Row 对象
     """
-    if hasattr(row, 'keys'):
+    if hasattr(row, "keys"):
         # sqlite3.Row 对象或字典
         data = dict(row)
     else:
@@ -107,8 +111,8 @@ def row_to_model(row: Any) -> ModelSchema:
         raise ValueError("Unsupported row type")
 
     # 移除时间戳字段（不在 ModelSchema 中）
-    data.pop('created_at', None)
-    data.pop('updated_at', None)
+    data.pop("created_at", None)
+    data.pop("updated_at", None)
 
     return ModelSchema.from_dict(data)
 
@@ -119,8 +123,8 @@ def import_model_from_preconfig(config: Dict[str, Any]) -> ModelSchema:
     自动填充默认值
     """
     # 必需字段
-    name = config.get('name')
-    provider = config.get('provider')
+    name = config.get("name")
+    provider = config.get("provider")
 
     if not name or not provider:
         raise ValueError("name and provider are required")
@@ -129,16 +133,16 @@ def import_model_from_preconfig(config: Dict[str, Any]) -> ModelSchema:
     return ModelSchema(
         name=name,
         provider=provider,
-        api_key=config.get('api_key'),
-        api_url=config.get('api_url'),
-        max_input_tokens=config.get('max_input_tokens'),
-        max_output_tokens=config.get('max_output_tokens'),
-        context_window=config.get('context_window'),
-        code_score=config.get('code_score'),
-        reasoning_score=config.get('reasoning_score'),
-        speed_score=config.get('speed_score'),
-        cost_per_1k_input=config.get('cost_per_1k_input'),
-        cost_per_1k_output=config.get('cost_per_1k_output'),
-        specialties=config.get('specialties'),
-        notes=config.get('notes')
+        api_key=config.get("api_key"),
+        api_url=config.get("api_url"),
+        max_input_tokens=config.get("max_input_tokens"),
+        max_output_tokens=config.get("max_output_tokens"),
+        context_window=config.get("context_window"),
+        code_score=config.get("code_score"),
+        reasoning_score=config.get("reasoning_score"),
+        speed_score=config.get("speed_score"),
+        cost_per_1k_input=config.get("cost_per_1k_input"),
+        cost_per_1k_output=config.get("cost_per_1k_output"),
+        specialties=config.get("specialties"),
+        notes=config.get("notes"),
     )

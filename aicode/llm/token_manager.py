@@ -1,10 +1,13 @@
 """
 Token计数和管理
 """
+
 from typing import Optional
+
 import tiktoken
-from aicode.models.schema import ModelSchema
+
 from aicode.llm.exceptions import TokenError, TokenLimitExceededError
+from aicode.models.schema import ModelSchema
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -18,16 +21,18 @@ class TokenManager:
 
     # 模型到编码器的映射
     MODEL_ENCODINGS = {
-        'gpt-4': 'cl100k_base',
-        'gpt-4-32k': 'cl100k_base',
-        'gpt-4-turbo': 'cl100k_base',
-        'gpt-3.5-turbo': 'cl100k_base',
-        'text-embedding-ada-002': 'cl100k_base',
-        'text-davinci-003': 'p50k_base',
-        'text-davinci-002': 'p50k_base',
+        "gpt-4": "cl100k_base",
+        "gpt-4-32k": "cl100k_base",
+        "gpt-4-turbo": "cl100k_base",
+        "gpt-3.5-turbo": "cl100k_base",
+        "text-embedding-ada-002": "cl100k_base",
+        "text-davinci-003": "p50k_base",
+        "text-davinci-002": "p50k_base",
     }
 
-    def __init__(self, model_name: Optional[str] = None, encoding_name: Optional[str] = None):
+    def __init__(
+        self, model_name: Optional[str] = None, encoding_name: Optional[str] = None
+    ):
         """
         初始化Token管理器
 
@@ -40,7 +45,9 @@ class TokenManager:
 
         try:
             self.encoding = tiktoken.get_encoding(self.encoding_name)
-            logger.debug(f"TokenManager initialized with encoding: {self.encoding_name}")
+            logger.debug(
+                f"TokenManager initialized with encoding: {self.encoding_name}"
+            )
         except Exception as e:
             logger.error(f"Failed to load encoding {self.encoding_name}: {e}")
             raise TokenError(f"Failed to load encoding: {e}")
@@ -146,9 +153,7 @@ class TokenManager:
             truncated_tokens = tokens[:max_tokens]
             truncated_text = self.encoding.decode(truncated_tokens)
 
-            logger.debug(
-                f"Truncated text from {len(tokens)} to {max_tokens} tokens"
-            )
+            logger.debug(f"Truncated text from {len(tokens)} to {max_tokens} tokens")
             return truncated_text
 
         except Exception as e:
@@ -156,10 +161,7 @@ class TokenManager:
             raise TokenError(f"Failed to truncate text: {e}")
 
     def estimate_cost(
-        self,
-        text: str,
-        model: ModelSchema,
-        output_tokens: Optional[int] = None
+        self, text: str, model: ModelSchema, output_tokens: Optional[int] = None
     ) -> Optional[float]:
         """
         估算API调用成本

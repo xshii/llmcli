@@ -1,8 +1,11 @@
 """
 测试日志系统
 """
-import pytest
+
 import logging
+
+import pytest
+
 from aicode.utils.logger import get_logger
 
 

@@ -2,10 +2,12 @@
 Repository 具体实现 - 适配器模式
 将现有的 DatabaseManager 和 ConfigManager 适配到抽象接口
 """
-from typing import Optional, List, Dict, Any
-from aicode.interfaces.repositories import IModelRepository, IConfigRepository
-from aicode.database.db_manager import DatabaseManager
+
+from typing import Any, Dict, List, Optional
+
 from aicode.config.config_manager import ConfigManager
+from aicode.database.db_manager import DatabaseManager
+from aicode.interfaces.repositories import IConfigRepository, IModelRepository
 from aicode.models.schema import ModelSchema
 
 
@@ -40,7 +42,9 @@ class SQLiteModelRepository(IModelRepository):
         """删除模型"""
         self._db.delete_model(name)
 
-    def query_models(self, filters: Optional[Dict[str, Any]] = None) -> List[ModelSchema]:
+    def query_models(
+        self, filters: Optional[Dict[str, Any]] = None
+    ) -> List[ModelSchema]:
         """查询模型列表"""
         return self._db.query_models(filters)
 

@@ -1,9 +1,11 @@
 """
 数据验证工具
 """
-from typing import Dict, Any, List, Optional
+
+from typing import Any, Dict, List, Optional
+
+from aicode.config.constants import MAX_SCORE, MIN_SCORE, SPECIALTIES
 from aicode.llm.exceptions import ValidationError
-from aicode.config.constants import MIN_SCORE, MAX_SCORE, SPECIALTIES
 
 
 def validate_model_name(name: Any) -> str:
@@ -103,7 +105,7 @@ def validate_specialties(value: Any) -> Optional[List[str]]:
 
     if isinstance(value, str):
         # 如果是字符串，尝试分割
-        value = [s.strip() for s in value.split(',') if s.strip()]
+        value = [s.strip() for s in value.split(",") if s.strip()]
 
     if not isinstance(value, list):
         raise ValidationError("Specialties must be a list or comma-separated string")
@@ -143,7 +145,7 @@ def validate_url(value: Any, field_name: str) -> Optional[str]:
     if not value:
         return None
 
-    if not value.startswith(('http://', 'https://')):
+    if not value.startswith(("http://", "https://")):
         raise ValidationError(f"{field_name} must start with http:// or https://")
 
     if len(value) > 2048:
@@ -152,7 +154,9 @@ def validate_url(value: Any, field_name: str) -> Optional[str]:
     return value
 
 
-def validate_string(value: Any, field_name: str, max_length: int = 1000) -> Optional[str]:
+def validate_string(
+    value: Any, field_name: str, max_length: int = 1000
+) -> Optional[str]:
     """验证字符串字段"""
     if value is None:
         return None
@@ -178,41 +182,41 @@ def validate_model_data(data: Dict[str, Any]) -> Dict[str, Any]:
     validated = {}
 
     # 必需字段
-    validated['name'] = validate_model_name(data.get('name'))
-    validated['provider'] = validate_provider(data.get('provider'))
+    validated["name"] = validate_model_name(data.get("name"))
+    validated["provider"] = validate_provider(data.get("provider"))
 
     # 可选字段
-    validated['api_key'] = validate_string(data.get('api_key'), 'api_key', 500)
-    validated['api_url'] = validate_url(data.get('api_url'), 'api_url')
+    validated["api_key"] = validate_string(data.get("api_key"), "api_key", 500)
+    validated["api_url"] = validate_url(data.get("api_url"), "api_url")
 
     # Token字段
-    validated['max_input_tokens'] = validate_token_count(
-        data.get('max_input_tokens'), 'max_input_tokens'
+    validated["max_input_tokens"] = validate_token_count(
+        data.get("max_input_tokens"), "max_input_tokens"
     )
-    validated['max_output_tokens'] = validate_token_count(
-        data.get('max_output_tokens'), 'max_output_tokens'
+    validated["max_output_tokens"] = validate_token_count(
+        data.get("max_output_tokens"), "max_output_tokens"
     )
-    validated['context_window'] = validate_token_count(
-        data.get('context_window'), 'context_window'
+    validated["context_window"] = validate_token_count(
+        data.get("context_window"), "context_window"
     )
 
     # 评分字段
-    validated['code_score'] = validate_score(data.get('code_score'), 'code_score')
-    validated['reasoning_score'] = validate_score(
-        data.get('reasoning_score'), 'reasoning_score'
+    validated["code_score"] = validate_score(data.get("code_score"), "code_score")
+    validated["reasoning_score"] = validate_score(
+        data.get("reasoning_score"), "reasoning_score"
     )
-    validated['speed_score'] = validate_score(data.get('speed_score'), 'speed_score')
+    validated["speed_score"] = validate_score(data.get("speed_score"), "speed_score")
 
     # 成本字段
-    validated['cost_per_1k_input'] = validate_cost(
-        data.get('cost_per_1k_input'), 'cost_per_1k_input'
+    validated["cost_per_1k_input"] = validate_cost(
+        data.get("cost_per_1k_input"), "cost_per_1k_input"
     )
-    validated['cost_per_1k_output'] = validate_cost(
-        data.get('cost_per_1k_output'), 'cost_per_1k_output'
+    validated["cost_per_1k_output"] = validate_cost(
+        data.get("cost_per_1k_output"), "cost_per_1k_output"
     )
 
     # 专长和备注
-    validated['specialties'] = validate_specialties(data.get('specialties'))
-    validated['notes'] = validate_string(data.get('notes'), 'notes', 2000)
+    validated["specialties"] = validate_specialties(data.get("specialties"))
+    validated["notes"] = validate_string(data.get("notes"), "notes", 2000)
 
     return validated

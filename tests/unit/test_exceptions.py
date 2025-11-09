@@ -1,22 +1,24 @@
 """
 测试异常体系
 """
+
 import pytest
+
 from aicode.llm.exceptions import (
     AICodeError,
-    DatabaseError,
-    ModelNotFoundError,
-    ModelAlreadyExistsError,
+    APIConnectionError,
+    APIError,
+    APITimeoutError,
     ConfigError,
     ConfigFileNotFoundError,
+    DatabaseError,
+    InvalidAPIKeyError,
     InvalidConfigError,
-    ValidationError,
+    ModelAlreadyExistsError,
+    ModelNotFoundError,
     TokenError,
     TokenLimitExceededError,
-    APIError,
-    APIConnectionError,
-    APITimeoutError,
-    InvalidAPIKeyError,
+    ValidationError,
 )
 
 

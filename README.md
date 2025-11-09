@@ -133,7 +133,7 @@ tests/
 
 ## 技术栈
 
-- **Python 3.9+**
+- **Python 3.8.1+**
 - **CLI框架**: argparse
 - **数据库**: SQLite
 - **配置**: YAML/JSON

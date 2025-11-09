@@ -11,7 +11,7 @@ def test_pollution_cleaning():
     print("=" * 60)
 
     # 模拟 DeepSeek 返回的响应（带有 <think> 标签）
-    polluted_response = '''
+    polluted_response = """
 <think>
 让我思考一下如何修改这个函数...
 需要添加错误处理
@@ -28,7 +28,7 @@ def divide(a, b):
     return a / b
 ```
 </file_edit>
-'''
+"""
 
     print("原始响应（带污染）:")
     print("-" * 60)
@@ -55,8 +55,8 @@ def divide(a, b):
     print()
 
     # 验证 <think> 标签被移除
-    assert '<think>' not in cleaned, "污染标签未被清除"
-    assert '</think>' not in cleaned, "污染标签未被清除"
+    assert "<think>" not in cleaned, "污染标签未被清除"
+    assert "</think>" not in cleaned, "污染标签未被清除"
     print("✓ <think> 标签已清除")
     print()
 
@@ -65,13 +65,13 @@ def divide(a, b):
     print("-" * 60)
 
     test_cases = [
-        ('<thinking>内部思考</thinking>', 'thinking'),
-        ('<reflection>反思内容</reflection>', 'reflection'),
-        ('<内部思考>中文思考</内部思考>', '内部思考'),
+        ("<thinking>内部思考</thinking>", "thinking"),
+        ("<reflection>反思内容</reflection>", "reflection"),
+        ("<内部思考>中文思考</内部思考>", "内部思考"),
     ]
 
     for polluted, tag_name in test_cases:
-        test_text = f"{polluted}\n<file_edit path=\"test.py\">```\ncode\n```</file_edit>"
+        test_text = f'{polluted}\n<file_edit path="test.py">```\ncode\n```</file_edit>'
         cleaned = CodeEditParser.clean_pollution(test_text)
         if tag_name in cleaned:
             print(f"✗ {tag_name} 标签未被清除")
@@ -84,5 +84,5 @@ def divide(a, b):
     print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_pollution_cleaning()

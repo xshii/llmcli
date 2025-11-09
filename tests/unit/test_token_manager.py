@@ -1,10 +1,12 @@
 """
 测试Token管理器
 """
+
 import pytest
+
+from aicode.llm.exceptions import TokenError, TokenLimitExceededError
 from aicode.llm.token_manager import TokenManager
 from aicode.models.schema import ModelSchema
-from aicode.llm.exceptions import TokenError, TokenLimitExceededError
 
 
 @pytest.fixture
@@ -23,10 +25,7 @@ def gpt4_token_manager():
 def sample_model():
     """示例模型fixture"""
     return ModelSchema(
-        name="gpt-4",
-        provider="openai",
-        max_input_tokens=8192,
-        context_window=128000
+        name="gpt-4", provider="openai", max_input_tokens=8192, context_window=128000
     )
 
 
@@ -123,11 +122,7 @@ class TestCheckLimit:
     def test_check_limit_exceeded(self, token_manager):
         """超过限制应该抛出异常"""
         # 创建一个小限制的模型
-        model = ModelSchema(
-            name="test",
-            provider="test",
-            max_input_tokens=10
-        )
+        model = ModelSchema(name="test", provider="test", max_input_tokens=10)
         text = "This is a very long text " * 100
         with pytest.raises(TokenLimitExceededError):
             token_manager.check_limit(text, model)
@@ -181,11 +176,7 @@ class TestEstimateCost:
 
     def test_estimate_cost_input_only(self, token_manager):
         """应该能估算仅输入的成本"""
-        model = ModelSchema(
-            name="gpt-4",
-            provider="openai",
-            cost_per_1k_input=0.03
-        )
+        model = ModelSchema(name="gpt-4", provider="openai", cost_per_1k_input=0.03)
         text = "Hello, world!"
         cost = token_manager.estimate_cost(text, model)
         assert cost is not None
@@ -197,7 +188,7 @@ class TestEstimateCost:
             name="gpt-4",
             provider="openai",
             cost_per_1k_input=0.03,
-            cost_per_1k_output=0.06
+            cost_per_1k_output=0.06,
         )
         text = "Hello, world!"
         cost = token_manager.estimate_cost(text, model, output_tokens=100)
@@ -217,7 +208,7 @@ class TestEstimateCost:
             name="test",
             provider="test",
             cost_per_1k_input=0.01,
-            cost_per_1k_output=0.02
+            cost_per_1k_output=0.02,
         )
         # 假设输入是10个token，输出是20个token
         text = "test"  # 实际token数可能不同，只是测试逻辑
@@ -245,11 +236,7 @@ class TestGetRemainingTokens:
 
     def test_get_remaining_tokens_nearly_full(self, token_manager):
         """接近限制应该返回较小的值"""
-        model = ModelSchema(
-            name="test",
-            provider="test",
-            max_input_tokens=100
-        )
+        model = ModelSchema(name="test", provider="test", max_input_tokens=100)
         text = "word " * 50  # 接近限制
         remaining = token_manager.get_remaining_tokens(text, model)
         assert remaining is not None
@@ -257,11 +244,7 @@ class TestGetRemainingTokens:
 
     def test_get_remaining_tokens_negative(self, token_manager):
         """超过限制应该返回0（不是负数）"""
-        model = ModelSchema(
-            name="test",
-            provider="test",
-            max_input_tokens=10
-        )
+        model = ModelSchema(name="test", provider="test", max_input_tokens=10)
         text = "word " * 100
         remaining = token_manager.get_remaining_tokens(text, model)
         assert remaining == 0

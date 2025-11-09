@@ -1,19 +1,22 @@
 """
 配置文件管理器（支持YAML/JSON）
 """
-import os
-import yaml
+
 import json
-from typing import Dict, Any, Optional, List
+import os
+from typing import Any, Dict, List, Optional
+
+import yaml
+
 from aicode.config.constants import DEFAULT_CONFIG_DIR, DEFAULT_CONFIG_FILE
-from aicode.models.schema import import_model_from_preconfig
-from aicode.utils.validators import validate_model_data
 from aicode.llm.exceptions import (
     ConfigError,
     ConfigFileNotFoundError,
-    InvalidConfigError
+    InvalidConfigError,
 )
+from aicode.models.schema import import_model_from_preconfig
 from aicode.utils.logger import get_logger
+from aicode.utils.validators import validate_model_data
 
 logger = get_logger(__name__)
 
@@ -30,8 +33,7 @@ class ConfigManager:
         """
         if config_path is None:
             config_path = os.path.join(
-                os.path.expanduser(DEFAULT_CONFIG_DIR),
-                DEFAULT_CONFIG_FILE
+                os.path.expanduser(DEFAULT_CONFIG_DIR), DEFAULT_CONFIG_FILE
             )
         self.config_path = os.path.expanduser(config_path)
         self.config: Dict[str, Any] = {}
@@ -49,14 +51,12 @@ class ConfigManager:
             InvalidConfigError: 配置文件格式错误
         """
         if not os.path.exists(self.config_path):
-            raise ConfigFileNotFoundError(
-                f"Config file not found: {self.config_path}"
-            )
+            raise ConfigFileNotFoundError(f"Config file not found: {self.config_path}")
 
         try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
+            with open(self.config_path, "r", encoding="utf-8") as f:
                 # 根据文件扩展名选择解析器
-                if self.config_path.endswith('.json'):
+                if self.config_path.endswith(".json"):
                     self.config = json.load(f)
                 else:
                     # 默认使用YAML
@@ -92,15 +92,12 @@ class ConfigManager:
             logger.debug(f"Created config directory: {config_dir}")
 
         try:
-            with open(self.config_path, 'w', encoding='utf-8') as f:
-                if self.config_path.endswith('.json'):
+            with open(self.config_path, "w", encoding="utf-8") as f:
+                if self.config_path.endswith(".json"):
                     json.dump(self.config, f, indent=2, ensure_ascii=False)
                 else:
                     yaml.safe_dump(
-                        self.config,
-                        f,
-                        default_flow_style=False,
-                        allow_unicode=True
+                        self.config, f, default_flow_style=False, allow_unicode=True
                     )
 
             logger.info(f"Saved config to {self.config_path}")
@@ -120,7 +117,7 @@ class ConfigManager:
         Returns:
             配置值或默认值
         """
-        keys = key.split('.')
+        keys = key.split(".")
         value = self.config
 
         for k in keys:
@@ -141,7 +138,7 @@ class ConfigManager:
             key: 配置键（支持点号分隔的嵌套键）
             value: 配置值
         """
-        keys = key.split('.')
+        keys = key.split(".")
         config = self.config
 
         # 导航到最后一级的父字典
@@ -161,7 +158,7 @@ class ConfigManager:
         Returns:
             Dict[str, Any]: 全局配置字典
         """
-        return self.config.get('global', {})
+        return self.config.get("global", {})
 
     def get_models_config(self) -> List[Dict[str, Any]]:
         """
@@ -170,7 +167,7 @@ class ConfigManager:
         Returns:
             List[Dict[str, Any]]: 模型配置列表
         """
-        models = self.config.get('models', [])
+        models = self.config.get("models", [])
         if not isinstance(models, list):
             logger.warning("models config is not a list, returning empty list")
             return []
@@ -191,28 +188,26 @@ class ConfigManager:
             raise InvalidConfigError("Config must be a dictionary")
 
         # 验证全局配置（如果存在）
-        if 'global' in self.config:
-            global_config = self.config['global']
+        if "global" in self.config:
+            global_config = self.config["global"]
             if not isinstance(global_config, dict):
                 raise InvalidConfigError("global config must be a dictionary")
 
         # 验证模型配置（如果存在）
-        if 'models' in self.config:
-            models = self.config['models']
+        if "models" in self.config:
+            models = self.config["models"]
             if not isinstance(models, list):
                 raise InvalidConfigError("models config must be a list")
 
             # 验证每个模型
             for i, model in enumerate(models):
                 if not isinstance(model, dict):
-                    raise InvalidConfigError(
-                        f"Model {i} must be a dictionary"
-                    )
+                    raise InvalidConfigError(f"Model {i} must be a dictionary")
 
                 # 验证必需字段
-                if 'name' not in model:
+                if "name" not in model:
                     raise InvalidConfigError(f"Model {i} missing 'name' field")
-                if 'provider' not in model:
+                if "provider" not in model:
                     raise InvalidConfigError(f"Model {i} missing 'provider' field")
 
                 # 使用验证器验证模型数据
@@ -277,7 +272,11 @@ class ConfigManager:
         result = base.copy()
 
         for key, value in update.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = value
@@ -298,12 +297,12 @@ class ConfigManager:
         创建默认配置文件
         """
         default_config = {
-            'global': {
-                'api_key': '',
-                'api_url': 'https://api.openai.com/v1',
-                'default_model': 'gpt-4'
+            "global": {
+                "api_key": "",
+                "api_url": "https://api.openai.com/v1",
+                "default_model": "gpt-4",
             },
-            'models': []
+            "models": [],
         }
 
         self.save(default_config)

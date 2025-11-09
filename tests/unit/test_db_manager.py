@@ -1,22 +1,25 @@
 """
 测试数据库管理器
 """
-import pytest
-import tempfile
+
 import os
+import tempfile
+
+import pytest
+
 from aicode.database.db_manager import DatabaseManager
-from aicode.models.schema import ModelSchema
 from aicode.llm.exceptions import (
     DatabaseError,
+    ModelAlreadyExistsError,
     ModelNotFoundError,
-    ModelAlreadyExistsError
 )
+from aicode.models.schema import ModelSchema
 
 
 @pytest.fixture
 def temp_db():
     """临时数据库fixture"""
-    with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
         db_path = f.name
     yield db_path
     if os.path.exists(db_path):
@@ -33,10 +36,7 @@ def db_manager(temp_db):
 def sample_model():
     """示例模型fixture"""
     return ModelSchema(
-        name="gpt-4",
-        provider="openai",
-        max_input_tokens=8192,
-        code_score=9.0
+        name="gpt-4", provider="openai", max_input_tokens=8192, code_score=9.0
     )
 
 
@@ -177,15 +177,9 @@ class TestQueryModels:
     def test_query_by_specialty(self, db_manager):
         """应该能按专长筛选"""
         model1 = ModelSchema(
-            name="gpt-4",
-            provider="openai",
-            specialties=["code", "reasoning"]
+            name="gpt-4", provider="openai", specialties=["code", "reasoning"]
         )
-        model2 = ModelSchema(
-            name="gpt-3.5",
-            provider="openai",
-            specialties=["chat"]
-        )
+        model2 = ModelSchema(name="gpt-3.5", provider="openai", specialties=["chat"])
         db_manager.insert_model(model1)
         db_manager.insert_model(model2)
 
@@ -201,12 +195,12 @@ class TestBatchOperations:
         """应该能批量导入模型"""
         models = [
             {"name": "gpt-4", "provider": "openai"},
-            {"name": "claude-3", "provider": "anthropic"}
+            {"name": "claude-3", "provider": "anthropic"},
         ]
         stats = db_manager.import_batch(models)
-        assert stats['imported'] == 2
-        assert stats['skipped'] == 0
-        assert stats['errors'] == 0
+        assert stats["imported"] == 2
+        assert stats["skipped"] == 0
+        assert stats["errors"] == 0
 
     def test_import_batch_with_duplicates(self, db_manager):
         """批量导入重复模型应该跳过"""
@@ -215,11 +209,11 @@ class TestBatchOperations:
 
         models = [
             {"name": "gpt-4", "provider": "openai"},
-            {"name": "claude-3", "provider": "anthropic"}
+            {"name": "claude-3", "provider": "anthropic"},
         ]
         stats = db_manager.import_batch(models)
-        assert stats['imported'] == 1
-        assert stats['skipped'] == 1
+        assert stats["imported"] == 1
+        assert stats["skipped"] == 1
 
     def test_import_batch_with_errors(self, db_manager):
         """批量导入包含错误数据应该统计错误"""
@@ -228,8 +222,8 @@ class TestBatchOperations:
             {"provider": "anthropic"},  # 缺少name
         ]
         stats = db_manager.import_batch(models)
-        assert stats['imported'] == 1
-        assert stats['errors'] == 1
+        assert stats["imported"] == 1
+        assert stats["errors"] == 1
 
     def test_export_all(self, db_manager):
         """应该能导出所有模型"""

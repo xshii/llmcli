@@ -1,9 +1,11 @@
 """
 server 命令 - 启动 RPC Server
 """
+
 import argparse
-from aicode.server.rpc_server import RPCServer
+
 from aicode.cli.utils.output import Output
+from aicode.server.rpc_server import RPCServer
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -20,23 +22,23 @@ def setup_parser(subparsers) -> argparse.ArgumentParser:
         ArgumentParser: server 命令的解析器
     """
     parser = subparsers.add_parser(
-        'server',
-        help='Start RPC server for VSCode extension',
-        description='Start JSON-RPC server for VSCode extension communication'
+        "server",
+        help="Start RPC server for VSCode extension",
+        description="Start JSON-RPC server for VSCode extension communication",
     )
 
     parser.add_argument(
-        '--mode',
-        choices=['stdio', 'tcp'],
-        default='stdio',
-        help='Server mode (default: stdio)'
+        "--mode",
+        choices=["stdio", "tcp"],
+        default="stdio",
+        help="Server mode (default: stdio)",
     )
 
     parser.add_argument(
-        '--port',
+        "--port",
         type=int,
         default=5555,
-        help='TCP port (only for tcp mode, default: 5555)'
+        help="TCP port (only for tcp mode, default: 5555)",
     )
 
     parser.set_defaults(func=execute)
@@ -54,7 +56,7 @@ def execute(args: argparse.Namespace) -> int:
         int: 退出码
     """
     try:
-        if args.mode == 'stdio':
+        if args.mode == "stdio":
             Output.print_info("Starting RPC server in stdio mode...")
             server = RPCServer()
             server.run()

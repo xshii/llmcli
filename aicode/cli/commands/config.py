@@ -2,9 +2,11 @@
 config 命令 - 管理配置
 重构后使用依赖注入，遵循依赖倒置原则
 """
+
 import argparse
-from aicode.infrastructure.di_container import get_container
+
 from aicode.cli.utils.output import Output
+from aicode.infrastructure.di_container import get_container
 from aicode.llm.exceptions import ConfigFileNotFoundError
 from aicode.utils.logger import get_logger
 
@@ -22,30 +24,34 @@ def setup_parser(subparsers) -> argparse.ArgumentParser:
         ArgumentParser: config命令的解析器
     """
     parser = subparsers.add_parser(
-        'config',
-        help='Manage configuration',
-        description='Get, set, or show configuration'
+        "config",
+        help="Manage configuration",
+        description="Get, set, or show configuration",
     )
 
-    config_subparsers = parser.add_subparsers(dest='config_command', help='Config commands')
+    config_subparsers = parser.add_subparsers(
+        dest="config_command", help="Config commands"
+    )
 
     # get 子命令
-    get_parser = config_subparsers.add_parser('get', help='Get a config value')
-    get_parser.add_argument('key', type=str, help='Config key (e.g., global.api_key)')
+    get_parser = config_subparsers.add_parser("get", help="Get a config value")
+    get_parser.add_argument("key", type=str, help="Config key (e.g., global.api_key)")
     get_parser.set_defaults(func=execute_get)
 
     # set 子命令
-    set_parser = config_subparsers.add_parser('set', help='Set a config value')
-    set_parser.add_argument('key', type=str, help='Config key')
-    set_parser.add_argument('value', type=str, help='Config value')
+    set_parser = config_subparsers.add_parser("set", help="Set a config value")
+    set_parser.add_argument("key", type=str, help="Config key")
+    set_parser.add_argument("value", type=str, help="Config value")
     set_parser.set_defaults(func=execute_set)
 
     # show 子命令
-    show_parser = config_subparsers.add_parser('show', help='Show all configuration')
+    show_parser = config_subparsers.add_parser("show", help="Show all configuration")
     show_parser.set_defaults(func=execute_show)
 
     # init 子命令
-    init_parser = config_subparsers.add_parser('init', help='Initialize default configuration')
+    init_parser = config_subparsers.add_parser(
+        "init", help="Initialize default configuration"
+    )
     init_parser.set_defaults(func=execute_init)
 
     parser.set_defaults(func=lambda args: parser.print_help())
@@ -72,9 +78,9 @@ def execute_get(args: argparse.Namespace) -> int:
             return 1
 
         # 隐藏敏感信息
-        if 'key' in args.key.lower() or 'secret' in args.key.lower():
+        if "key" in args.key.lower() or "secret" in args.key.lower():
             if isinstance(value, str) and len(value) > 8:
-                value = value[:4] + '***' + value[-4:]
+                value = value[:4] + "***" + value[-4:]
 
         print(value)
         return 0
@@ -96,6 +102,7 @@ def execute_set(args: argparse.Namespace) -> int:
             Output.print_warning("Config file not found, creating default config...")
             # 需要直接访问底层 ConfigManager 来创建默认配置
             from aicode.config.config_manager import ConfigManager
+
             cm = ConfigManager()
             cm.create_default_config()
 
@@ -154,10 +161,13 @@ def execute_init(args: argparse.Namespace) -> int:
 
         # 需要直接访问底层 ConfigManager 来创建默认配置和获取路径
         from aicode.config.config_manager import ConfigManager
+
         cm = ConfigManager()
         cm.create_default_config()
         Output.print_success(f"Created config file at: {cm.config_path}")
-        Output.print_info("Set your API key with: aicode config set global.api_key YOUR_KEY")
+        Output.print_info(
+            "Set your API key with: aicode config set global.api_key YOUR_KEY"
+        )
         return 0
 
     except Exception as e:
@@ -176,7 +186,7 @@ def _mask_sensitive_values(config: dict) -> dict:
     Returns:
         dict: 处理后的配置
     """
-    sensitive_keys = ['api_key', 'secret', 'password', 'token']
+    sensitive_keys = ["api_key", "secret", "password", "token"]
 
     for key, value in config.items():
         if isinstance(value, dict):
@@ -185,9 +195,9 @@ def _mask_sensitive_values(config: dict) -> dict:
             # 检查键名是否包含敏感关键字
             if any(sensitive in key.lower() for sensitive in sensitive_keys):
                 if len(value) > 8:
-                    config[key] = value[:4] + '***' + value[-4:]
+                    config[key] = value[:4] + "***" + value[-4:]
                 else:
-                    config[key] = '***'
+                    config[key] = "***"
 
     return config
 
@@ -202,7 +212,7 @@ def execute(args: argparse.Namespace) -> int:
     Returns:
         int: 退出码
     """
-    if hasattr(args, 'func') and args.func != execute:
+    if hasattr(args, "func") and args.func != execute:
         return args.func(args)
     else:
         Output.print_error("Please specify a subcommand: get, set, show, or init")
