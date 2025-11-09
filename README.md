@@ -138,5 +138,55 @@ tests/
 - **数据库**: SQLite
 - **配置**: YAML/JSON
 - **Token计数**: tiktoken
+- **HTTP客户端**: httpx
 - **测试**: pytest
-- **依赖**: pyyaml, tiktoken
+- **依赖**: pyyaml, tiktoken, httpx
+
+## Ollama 本地模型支持 🆕
+
+### 安装 Ollama
+
+```bash
+# macOS/Linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Windows
+# 下载：https://ollama.com/download/windows
+```
+
+### 使用 Ollama
+
+```bash
+# 1. 启动 Ollama 服务
+ollama serve
+
+# 2. 搜索可用模型
+aicode ollama search llama
+
+# 3. 下载模型
+aicode ollama pull llama2:13b
+
+# 4. 列出本地模型
+aicode ollama list
+
+# 5. 添加到 aicode
+aicode model add llama2:13b ollama \
+  --api-url http://localhost:11434/v1 \
+  --local \
+  --code-score 7.5
+
+# 6. 使用本地模型对话
+aicode chat "写一个快速排序" --model llama2:13b
+
+# 7. 删除模型
+aicode ollama remove llama2:13b
+```
+
+### 推荐模型
+
+| 模型 | 大小 | 用途 | 命令 |
+|------|------|------|------|
+| codellama:7b | 3.8GB | 代码生成 | `aicode ollama pull codellama:7b` |
+| llama2:13b | 7.3GB | 通用对话 | `aicode ollama pull llama2:13b` |
+| deepseek-r1:7b | 4.1GB | 推理任务 | `aicode ollama pull deepseek-r1:7b` |
+| gemma2:9b | 5.4GB | 轻量通用 | `aicode ollama pull gemma2:9b` |

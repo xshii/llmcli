@@ -6,7 +6,7 @@ import argparse
 import sys
 from typing import List, Optional
 
-from aicode.cli.commands import chat, config, model, probe, server, session
+from aicode.cli.commands import chat, config, model, ollama, probe, server, session
 from aicode.cli.interactive import start_interactive
 from aicode.cli.utils.output import Output
 from aicode.config.constants import PROJECT_NAME, VERSION
@@ -49,6 +49,7 @@ def create_parser() -> argparse.ArgumentParser:
     session.setup_parser(subparsers)
     server.setup_parser(subparsers)
     probe.setup_parser(subparsers)
+    ollama.setup_parser(subparsers)
 
     # interactive 命令
     interactive_parser = subparsers.add_parser(

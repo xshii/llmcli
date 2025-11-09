@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS models (
     specialties TEXT,
     notes TEXT,
     vscode_friendly INTEGER DEFAULT 1,
+    is_local INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -50,6 +51,7 @@ class ModelSchema:
     specialties: Optional[List[str]] = None
     notes: Optional[str] = None
     vscode_friendly: bool = True  # 是否能很好地遵循代码编辑格式要求
+    is_local: bool = False  # 是否为本地模型（如 Ollama）
 
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典（用于数据库存储）"""
