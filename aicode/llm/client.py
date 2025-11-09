@@ -34,7 +34,8 @@ class LLMClient:
         self.api_key = api_key or model.api_key
         self.api_url = api_url or model.api_url
 
-        if not self.api_key:
+        # Ollama 等本地模型不需要 API key
+        if not self.api_key and not model.is_local:
             raise APIError("API key is required")
         if not self.api_url:
             raise APIError("API URL is required")
@@ -112,22 +113,54 @@ class LLMClient:
 
     def _make_request(self, payload: Dict[str, Any]) -> str:
         """
-        发送HTTP请求（简化版）
-
-        实际实现应该使用 httpx 或 openai SDK
+        发送HTTP请求
 
         Args:
             payload: 请求payload
 
         Returns:
             str: 响应内容
+
+        Raises:
+            APIConnectionError: 连接失败
+            APITimeoutError: 请求超时
+            APIError: API错误
         """
-        # TODO: 实际实现需要使用 httpx 发送 POST 请求
-        # 这里返回模拟响应，用于测试
+        import httpx
+
         logger.debug("Making HTTP request to LLM API")
 
-        # 模拟响应（实际应该调用真实API）
-        return "This is a mock response. Implement with httpx or openai SDK."
+        headers = {"Content-Type": "application/json"}
+        # API key 可选（本地模型如 Ollama 不需要）
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        try:
+            response = httpx.post(
+                f"{self.api_url}/chat/completions",
+                json=payload,
+                headers=headers,
+                timeout=60.0,
+            )
+            response.raise_for_status()
+
+            result = response.json()
+            content = result["choices"][0]["message"]["content"]
+            logger.debug(f"Received response: {len(content)} characters")
+            return content
+
+        except httpx.TimeoutException as e:
+            logger.error(f"Request timeout: {e}")
+            raise APITimeoutError(f"Request timed out: {e}")
+        except httpx.ConnectError as e:
+            logger.error(f"Connection failed: {e}")
+            raise APIConnectionError(f"Failed to connect to API: {e}")
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error: {e}")
+            raise APIError(f"API returned error: {e.response.status_code}")
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            raise APIError(f"Unexpected error: {e}")
 
     def count_message_tokens(self, messages: List[Dict[str, str]]) -> int:
         """
