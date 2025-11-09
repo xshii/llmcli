@@ -57,7 +57,7 @@ jobs:
         echo "Generated changelog with $(wc -l < CHANGELOG.txt) entries"
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         name: Release ${{ steps.version.outputs.tag }}
         body_path: CHANGELOG.txt
