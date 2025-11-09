@@ -1,19 +1,21 @@
 """
 测试数据验证工具
 """
+
 import pytest
+
+from aicode.llm.exceptions import ValidationError
 from aicode.utils.validators import (
+    validate_cost,
+    validate_model_data,
     validate_model_name,
     validate_provider,
-    validate_token_count,
     validate_score,
-    validate_cost,
     validate_specialties,
-    validate_url,
     validate_string,
-    validate_model_data
+    validate_token_count,
+    validate_url,
 )
-from aicode.llm.exceptions import ValidationError
 
 
 class TestValidateModelName:
@@ -321,86 +323,68 @@ class TestValidateModelData:
 
     def test_valid_minimal_data(self):
         """有效的最小数据"""
-        data = {
-            'name': 'gpt-4',
-            'provider': 'openai'
-        }
+        data = {"name": "gpt-4", "provider": "openai"}
         validated = validate_model_data(data)
-        assert validated['name'] == 'gpt-4'
-        assert validated['provider'] == 'openai'
+        assert validated["name"] == "gpt-4"
+        assert validated["provider"] == "openai"
 
     def test_valid_full_data(self):
         """有效的完整数据"""
         data = {
-            'name': 'claude-3',
-            'provider': 'anthropic',
-            'api_key': 'sk-test',
-            'api_url': 'https://api.anthropic.com',
-            'max_input_tokens': 200000,
-            'max_output_tokens': 4096,
-            'context_window': 200000,
-            'code_score': 9.5,
-            'reasoning_score': 9.0,
-            'speed_score': 8.0,
-            'cost_per_1k_input': 0.015,
-            'cost_per_1k_output': 0.075,
-            'specialties': ['code', 'reasoning'],
-            'notes': 'Excellent for coding'
+            "name": "claude-3",
+            "provider": "anthropic",
+            "api_key": "sk-test",
+            "api_url": "https://api.anthropic.com",
+            "max_input_tokens": 200000,
+            "max_output_tokens": 4096,
+            "context_window": 200000,
+            "code_score": 9.5,
+            "reasoning_score": 9.0,
+            "speed_score": 8.0,
+            "cost_per_1k_input": 0.015,
+            "cost_per_1k_output": 0.075,
+            "specialties": ["code", "reasoning"],
+            "notes": "Excellent for coding",
         }
         validated = validate_model_data(data)
-        assert validated['name'] == 'claude-3'
-        assert validated['max_input_tokens'] == 200000
-        assert validated['code_score'] == 9.5
-        assert validated['specialties'] == ['code', 'reasoning']
+        assert validated["name"] == "claude-3"
+        assert validated["max_input_tokens"] == 200000
+        assert validated["code_score"] == 9.5
+        assert validated["specialties"] == ["code", "reasoning"]
 
     def test_missing_name(self):
         """缺少name应该报错"""
-        data = {'provider': 'openai'}
+        data = {"provider": "openai"}
         with pytest.raises(ValidationError, match="name"):
             validate_model_data(data)
 
     def test_missing_provider(self):
         """缺少provider应该报错"""
-        data = {'name': 'gpt-4'}
+        data = {"name": "gpt-4"}
         with pytest.raises(ValidationError, match="Provider"):
             validate_model_data(data)
 
     def test_invalid_score_in_data(self):
         """数据中包含无效评分应该报错"""
-        data = {
-            'name': 'test',
-            'provider': 'test',
-            'code_score': 11.0
-        }
+        data = {"name": "test", "provider": "test", "code_score": 11.0}
         with pytest.raises(ValidationError, match="must be between"):
             validate_model_data(data)
 
     def test_invalid_token_count_in_data(self):
         """数据中包含无效token数量应该报错"""
-        data = {
-            'name': 'test',
-            'provider': 'test',
-            'max_input_tokens': -100
-        }
+        data = {"name": "test", "provider": "test", "max_input_tokens": -100}
         with pytest.raises(ValidationError, match="must be positive"):
             validate_model_data(data)
 
     def test_validate_trims_whitespace(self):
         """验证应该去除空格"""
-        data = {
-            'name': '  gpt-4  ',
-            'provider': '  openai  '
-        }
+        data = {"name": "  gpt-4  ", "provider": "  openai  "}
         validated = validate_model_data(data)
-        assert validated['name'] == 'gpt-4'
-        assert validated['provider'] == 'openai'
+        assert validated["name"] == "gpt-4"
+        assert validated["provider"] == "openai"
 
     def test_validate_converts_specialty_string(self):
         """验证应该转换专长字符串为列表"""
-        data = {
-            'name': 'test',
-            'provider': 'test',
-            'specialties': 'code,reasoning'
-        }
+        data = {"name": "test", "provider": "test", "specialties": "code,reasoning"}
         validated = validate_model_data(data)
-        assert validated['specialties'] == ['code', 'reasoning']
+        assert validated["specialties"] == ["code", "reasoning"]

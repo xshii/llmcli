@@ -1,12 +1,14 @@
 """
 测试数据模型
 """
+
 import pytest
+
 from aicode.models.schema import (
-    ModelSchema,
     CREATE_MODELS_TABLE,
+    ModelSchema,
+    import_model_from_preconfig,
     row_to_model,
-    import_model_from_preconfig
 )
 
 
@@ -36,7 +38,7 @@ class TestModelSchema:
             cost_per_1k_input=0.03,
             cost_per_1k_output=0.06,
             specialties=["code", "reasoning"],
-            notes="Best for complex tasks"
+            notes="Best for complex tasks",
         )
         assert model.name == "gpt-4"
         assert model.max_input_tokens == 8192
@@ -46,28 +48,26 @@ class TestModelSchema:
     def test_to_dict(self):
         """测试转换为字典"""
         model = ModelSchema(
-            name="claude-3",
-            provider="anthropic",
-            specialties=["code", "reasoning"]
+            name="claude-3", provider="anthropic", specialties=["code", "reasoning"]
         )
         data = model.to_dict()
         assert isinstance(data, dict)
-        assert data['name'] == "claude-3"
-        assert data['specialties'] == "code,reasoning"  # 转为字符串
+        assert data["name"] == "claude-3"
+        assert data["specialties"] == "code,reasoning"  # 转为字符串
 
     def test_to_dict_no_specialties(self):
         """测试无专长时转换为字典"""
         model = ModelSchema(name="test", provider="test")
         data = model.to_dict()
-        assert data['specialties'] is None
+        assert data["specialties"] is None
 
     def test_from_dict(self):
         """测试从字典创建"""
         data = {
-            'name': 'gpt-4',
-            'provider': 'openai',
-            'max_input_tokens': 8192,
-            'specialties': 'code,reasoning'
+            "name": "gpt-4",
+            "provider": "openai",
+            "max_input_tokens": 8192,
+            "specialties": "code,reasoning",
         }
         model = ModelSchema.from_dict(data)
         assert model.name == "gpt-4"
@@ -76,32 +76,21 @@ class TestModelSchema:
 
     def test_from_dict_with_list_specialties(self):
         """测试从字典创建（专长已是列表）"""
-        data = {
-            'name': 'test',
-            'provider': 'test',
-            'specialties': ['code', 'chat']
-        }
+        data = {"name": "test", "provider": "test", "specialties": ["code", "chat"]}
         model = ModelSchema.from_dict(data)
-        assert model.specialties == ['code', 'chat']
+        assert model.specialties == ["code", "chat"]
 
     def test_get_context_limit_with_context_window(self):
         """测试获取上下文限制（优先使用context_window）"""
         model = ModelSchema(
-            name="test",
-            provider="test",
-            context_window=100000,
-            max_input_tokens=8192
+            name="test", provider="test", context_window=100000, max_input_tokens=8192
         )
         limit = model.get_context_limit()
         assert limit == int(100000 * 0.9)  # 使用缓冲比例
 
     def test_get_context_limit_with_max_input(self):
         """测试获取上下文限制（使用max_input_tokens）"""
-        model = ModelSchema(
-            name="test",
-            provider="test",
-            max_input_tokens=8192
-        )
+        model = ModelSchema(name="test", provider="test", max_input_tokens=8192)
         limit = model.get_context_limit()
         assert limit == int(8192 * 0.9)
 
@@ -118,26 +107,19 @@ class TestModelSchema:
             provider="test",
             code_score=9.0,
             reasoning_score=8.5,
-            speed_score=7.0
+            speed_score=7.0,
         )
         assert model.validate_scores() is True
 
     def test_validate_scores_invalid(self):
         """测试验证无效评分"""
-        model = ModelSchema(
-            name="test",
-            provider="test",
-            code_score=11.0  # 超出范围
-        )
+        model = ModelSchema(name="test", provider="test", code_score=11.0)  # 超出范围
         assert model.validate_scores() is False
 
     def test_validate_scores_with_none(self):
         """测试验证评分（包含None）"""
         model = ModelSchema(
-            name="test",
-            provider="test",
-            code_score=9.0,
-            reasoning_score=None
+            name="test", provider="test", code_score=9.0, reasoning_score=None
         )
         assert model.validate_scores() is True
 
@@ -167,17 +149,17 @@ class TestRowToModel:
     def test_row_to_model_from_dict(self):
         """测试从字典转换"""
         row = {
-            'name': 'gpt-4',
-            'provider': 'openai',
-            'max_input_tokens': 8192,
-            'specialties': 'code,reasoning',
-            'created_at': '2024-01-01',
-            'updated_at': '2024-01-02'
+            "name": "gpt-4",
+            "provider": "openai",
+            "max_input_tokens": 8192,
+            "specialties": "code,reasoning",
+            "created_at": "2024-01-01",
+            "updated_at": "2024-01-02",
         }
         model = row_to_model(row)
         assert isinstance(model, ModelSchema)
-        assert model.name == 'gpt-4'
-        assert model.specialties == ['code', 'reasoning']
+        assert model.name == "gpt-4"
+        assert model.specialties == ["code", "reasoning"]
 
     def test_row_to_model_invalid_type(self):
         """测试不支持的行类型"""
@@ -190,42 +172,39 @@ class TestImportModelFromPreconfig:
 
     def test_import_minimal_config(self):
         """导入最小配置"""
-        config = {
-            'name': 'gpt-4',
-            'provider': 'openai'
-        }
+        config = {"name": "gpt-4", "provider": "openai"}
         model = import_model_from_preconfig(config)
-        assert model.name == 'gpt-4'
-        assert model.provider == 'openai'
+        assert model.name == "gpt-4"
+        assert model.provider == "openai"
 
     def test_import_full_config(self):
         """导入完整配置"""
         config = {
-            'name': 'claude-3',
-            'provider': 'anthropic',
-            'max_input_tokens': 200000,
-            'code_score': 9.5,
-            'specialties': ['code', 'reasoning']
+            "name": "claude-3",
+            "provider": "anthropic",
+            "max_input_tokens": 200000,
+            "code_score": 9.5,
+            "specialties": ["code", "reasoning"],
         }
         model = import_model_from_preconfig(config)
-        assert model.name == 'claude-3'
+        assert model.name == "claude-3"
         assert model.max_input_tokens == 200000
-        assert model.specialties == ['code', 'reasoning']
+        assert model.specialties == ["code", "reasoning"]
 
     def test_import_missing_name(self):
         """导入缺少name应该报错"""
-        config = {'provider': 'openai'}
+        config = {"provider": "openai"}
         with pytest.raises(ValueError, match="name and provider are required"):
             import_model_from_preconfig(config)
 
     def test_import_missing_provider(self):
         """导入缺少provider应该报错"""
-        config = {'name': 'gpt-4'}
+        config = {"name": "gpt-4"}
         with pytest.raises(ValueError, match="name and provider are required"):
             import_model_from_preconfig(config)
 
     def test_import_empty_name(self):
         """导入空name应该报错"""
-        config = {'name': '', 'provider': 'openai'}
+        config = {"name": "", "provider": "openai"}
         with pytest.raises(ValueError):
             import_model_from_preconfig(config)

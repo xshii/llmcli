@@ -1,9 +1,11 @@
 """
 代码编辑 - 结构化的代码修改建议
 """
+
 import re
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -22,11 +24,11 @@ class FileEdit:
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return {
-            'file_path': self.file_path,
-            'original_content': self.original_content,
-            'new_content': self.new_content,
-            'description': self.description,
-            'edit_type': self.edit_type
+            "file_path": self.file_path,
+            "original_content": self.original_content,
+            "new_content": self.new_content,
+            "description": self.description,
+            "edit_type": self.edit_type,
         }
 
 
@@ -43,17 +45,17 @@ class CodeEditParser:
 
     EDIT_PATTERN = re.compile(
         r'<file_edit\s+path="([^"]+)"(?:\s+type="([^"]+)")?(?:\s+description="([^"]*)")?\s*>\s*'
-        r'```(?:\w+)?\s*\n(.*?)\n```\s*'
-        r'</file_edit>',
-        re.DOTALL
+        r"```(?:\w+)?\s*\n(.*?)\n```\s*"
+        r"</file_edit>",
+        re.DOTALL,
     )
 
     # 污染标签模式（需要清理的内容）
     POLLUTION_PATTERNS = [
-        r'<think>.*?</think>',
-        r'<thinking>.*?</thinking>',
-        r'<reflection>.*?</reflection>',
-        r'<内部思考>.*?</内部思考>',
+        r"<think>.*?</think>",
+        r"<thinking>.*?</thinking>",
+        r"<reflection>.*?</reflection>",
+        r"<内部思考>.*?</内部思考>",
     ]
 
     @classmethod
@@ -76,15 +78,15 @@ class CodeEditParser:
 
         for match in cls.EDIT_PATTERN.finditer(text):
             file_path = match.group(1)
-            edit_type = match.group(2) or 'modify'
-            description = match.group(3) or ''
+            edit_type = match.group(2) or "modify"
+            description = match.group(3) or ""
             new_content = match.group(4)
 
             edit = FileEdit(
                 file_path=file_path,
                 new_content=new_content,
                 description=description,
-                edit_type=edit_type
+                edit_type=edit_type,
             )
             edits.append(edit)
             logger.debug(f"Parsed edit for {file_path}: {edit_type}")
@@ -107,7 +109,7 @@ class CodeEditParser:
             # 检查是否存在污染
             if re.search(pattern, cleaned, re.DOTALL | re.IGNORECASE):
                 logger.debug(f"Cleaning pollution pattern: {pattern}")
-                cleaned = re.sub(pattern, '', cleaned, flags=re.DOTALL | re.IGNORECASE)
+                cleaned = re.sub(pattern, "", cleaned, flags=re.DOTALL | re.IGNORECASE)
 
         return cleaned
 

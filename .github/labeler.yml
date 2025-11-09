@@ -1,38 +1,56 @@
 # Label PRs based on file changes
+# Using actions/labeler@v5 syntax
 
 'type: documentation':
-  - '**/*.md'
-  - 'docs/**/*'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*.md'
+      - 'docs/**/*'
 
 'type: tests':
-  - 'tests/**/*'
-  - '**/*test*.py'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'tests/**/*'
+      - '**/*test*.py'
 
 'type: dependencies':
-  - 'requirements.txt'
-  - 'setup.py'
-  - 'pyproject.toml'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'requirements.txt'
+      - 'setup.py'
+      - 'pyproject.toml'
 
 'area: cli':
-  - 'aicode/cli/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 'aicode/cli/**/*'
 
 'area: llm':
-  - 'aicode/llm/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 'aicode/llm/**/*'
 
 'area: database':
-  - 'aicode/database/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 'aicode/database/**/*'
 
 'area: config':
-  - 'aicode/config/**/*'
+  - changed-files:
+    - any-glob-to-any-file: 'aicode/config/**/*'
 
 'area: infrastructure':
-  - 'aicode/infrastructure/**/*'
-  - 'aicode/interfaces/**/*'
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'aicode/infrastructure/**/*'
+      - 'aicode/interfaces/**/*'
 
 'type: ci/cd':
-  - '.github/**/*'
-  - '.gitignore'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/**/*'
+      - '.gitignore'
 
 'type: refactor':
-  - any: ['aicode/**/*']
-    all: ['!tests/**/*', '!**/*.md']
+  - changed-files:
+    - any-glob-to-any-file: 'aicode/**/*'
+    - all-globs-to-all-files:
+      - '!tests/**/*'
+      - '!**/*.md'

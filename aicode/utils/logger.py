@@ -1,9 +1,11 @@
 """
 简单的日志系统
 """
+
 import logging
 from typing import Optional
-from aicode.config.constants import LOG_FORMAT, LOG_DATE_FORMAT, DEFAULT_LOG_LEVEL
+
+from aicode.config.constants import DEFAULT_LOG_LEVEL, LOG_DATE_FORMAT, LOG_FORMAT
 
 
 def get_logger(name: str, level: Optional[str] = None) -> logging.Logger:

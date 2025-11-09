@@ -2,17 +2,22 @@
 依赖注入容器 - Dependency Injection Container
 支持惰性加载（Lazy Loading）和单例模式（Singleton）
 """
-from typing import Optional, Callable, TypeVar, Generic
-from aicode.interfaces.repositories import IModelRepository, IConfigRepository
-from aicode.infrastructure.repositories import SQLiteModelRepository, YAMLConfigRepository
-from aicode.database.db_manager import DatabaseManager
+
+from typing import Callable, Generic, Optional, TypeVar
+
 from aicode.config.config_manager import ConfigManager
-from aicode.utils.paths import get_db_path
+from aicode.database.db_manager import DatabaseManager
+from aicode.infrastructure.repositories import (
+    SQLiteModelRepository,
+    YAMLConfigRepository,
+)
+from aicode.interfaces.repositories import IConfigRepository, IModelRepository
 from aicode.utils.logger import get_logger
+from aicode.utils.paths import get_db_path
 
 logger = get_logger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class LazyDependency(Generic[T]):
@@ -57,7 +62,7 @@ class DIContainer:
     管理应用程序的所有依赖，支持惰性加载
     """
 
-    _instance: Optional['DIContainer'] = None
+    _instance: Optional["DIContainer"] = None
     _initialized = False
 
     def __new__(cls):

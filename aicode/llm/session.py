@@ -1,11 +1,13 @@
 """
 会话管理 - 对话历史管理
 """
+
 import json
 import os
-from typing import List, Dict, Any, Optional
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 from aicode.config.constants import DEFAULT_CONFIG_DIR
 from aicode.llm.exceptions import ConfigError
 from aicode.utils.logger import get_logger
@@ -23,7 +25,7 @@ class Session:
         messages: Optional[List[Dict[str, str]]] = None,
         created_at: Optional[str] = None,
         updated_at: Optional[str] = None,
-        title: Optional[str] = None
+        title: Optional[str] = None,
     ):
         """
         初始化会话
@@ -51,11 +53,9 @@ class Session:
             role: 角色（user/assistant/system）
             content: 消息内容
         """
-        self.messages.append({
-            'role': role,
-            'content': content,
-            'timestamp': datetime.now().isoformat()
-        })
+        self.messages.append(
+            {"role": role, "content": content, "timestamp": datetime.now().isoformat()}
+        )
         self.updated_at = datetime.now().isoformat()
         logger.debug(f"Added {role} message to session {self.session_id}")
 
@@ -67,31 +67,30 @@ class Session:
             List[Dict]: 消息列表
         """
         return [
-            {'role': msg['role'], 'content': msg['content']}
-            for msg in self.messages
+            {"role": msg["role"], "content": msg["content"]} for msg in self.messages
         ]
 
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典"""
         return {
-            'session_id': self.session_id,
-            'model': self.model,
-            'messages': self.messages,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
-            'title': self.title
+            "session_id": self.session_id,
+            "model": self.model,
+            "messages": self.messages,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "title": self.title,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Session':
+    def from_dict(cls, data: Dict[str, Any]) -> "Session":
         """从字典创建会话"""
         return cls(
-            session_id=data['session_id'],
-            model=data['model'],
-            messages=data.get('messages', []),
-            created_at=data.get('created_at'),
-            updated_at=data.get('updated_at'),
-            title=data.get('title')
+            session_id=data["session_id"],
+            model=data["model"],
+            messages=data.get("messages", []),
+            created_at=data.get("created_at"),
+            updated_at=data.get("updated_at"),
+            title=data.get("title"),
         )
 
     def get_message_count(self) -> int:
@@ -115,7 +114,7 @@ class SessionManager:
         """
         if sessions_dir is None:
             config_dir = Path(DEFAULT_CONFIG_DIR).expanduser()
-            sessions_dir = config_dir / 'sessions'
+            sessions_dir = config_dir / "sessions"
 
         self.sessions_dir = Path(sessions_dir).expanduser()
         self.sessions_dir.mkdir(parents=True, exist_ok=True)
@@ -133,7 +132,7 @@ class SessionManager:
             Session: 新会话
         """
         # 生成会话ID（时间戳）
-        session_id = datetime.now().strftime('%Y%m%d_%H%M%S')
+        session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         session = Session(session_id, model, title=title)
         self.save_session(session)
         logger.info(f"Created session: {session_id}")
@@ -147,7 +146,7 @@ class SessionManager:
             session: 会话对象
         """
         session_file = self.sessions_dir / f"{session.session_id}.json"
-        with open(session_file, 'w', encoding='utf-8') as f:
+        with open(session_file, "w", encoding="utf-8") as f:
             json.dump(session.to_dict(), f, indent=2, ensure_ascii=False)
         logger.debug(f"Saved session: {session.session_id}")
 
@@ -168,7 +167,7 @@ class SessionManager:
         if not session_file.exists():
             raise ConfigError(f"Session '{session_id}' not found")
 
-        with open(session_file, 'r', encoding='utf-8') as f:
+        with open(session_file, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         logger.debug(f"Loaded session: {session_id}")
@@ -182,9 +181,9 @@ class SessionManager:
             List[Session]: 会话列表（按更新时间倒序）
         """
         sessions = []
-        for session_file in self.sessions_dir.glob('*.json'):
+        for session_file in self.sessions_dir.glob("*.json"):
             try:
-                with open(session_file, 'r', encoding='utf-8') as f:
+                with open(session_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 sessions.append(Session.from_dict(data))
             except Exception as e:
@@ -243,7 +242,7 @@ class SessionManager:
             int: 删除的会话数量
         """
         count = 0
-        for session_file in self.sessions_dir.glob('*.json'):
+        for session_file in self.sessions_dir.glob("*.json"):
             session_file.unlink()
             count += 1
 

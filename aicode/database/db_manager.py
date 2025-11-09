@@ -1,22 +1,20 @@
 """
 SQLite数据库管理器
 """
-import sqlite3
+
 import os
-from typing import Optional, List, Dict, Any
+import sqlite3
 from contextlib import contextmanager
-from aicode.models.schema import (
-    ModelSchema,
-    CREATE_MODELS_TABLE,
-    row_to_model
-)
-from aicode.utils.validators import validate_model_data
+from typing import Any, Dict, List, Optional
+
 from aicode.llm.exceptions import (
     DatabaseError,
+    ModelAlreadyExistsError,
     ModelNotFoundError,
-    ModelAlreadyExistsError
 )
+from aicode.models.schema import CREATE_MODELS_TABLE, ModelSchema, row_to_model
 from aicode.utils.logger import get_logger
+from aicode.utils.validators import validate_model_data
 
 logger = get_logger(__name__)
 
@@ -91,8 +89,8 @@ class DatabaseManager:
 
         try:
             data = model.to_dict()
-            columns = ', '.join(data.keys())
-            placeholders = ', '.join(['?' for _ in data])
+            columns = ", ".join(data.keys())
+            placeholders = ", ".join(["?" for _ in data])
             sql = f"INSERT INTO models ({columns}) VALUES ({placeholders})"
 
             with self.get_connection() as conn:
@@ -129,7 +127,7 @@ class DatabaseManager:
             merged_data.update(updates)
             validate_model_data(merged_data)
 
-            set_clause = ', '.join([f"{key} = ?" for key in updates.keys()])
+            set_clause = ", ".join([f"{key} = ?" for key in updates.keys()])
             sql = f"UPDATE models SET {set_clause}, updated_at = CURRENT_TIMESTAMP WHERE name = ?"
 
             with self.get_connection() as conn:
@@ -156,8 +154,7 @@ class DatabaseManager:
         try:
             with self.get_connection() as conn:
                 cursor = conn.execute(
-                    "SELECT * FROM models WHERE name = ?",
-                    (model_name,)
+                    "SELECT * FROM models WHERE name = ?", (model_name,)
                 )
                 row = cursor.fetchone()
 
@@ -206,8 +203,7 @@ class DatabaseManager:
         try:
             with self.get_connection() as conn:
                 cursor = conn.execute(
-                    "SELECT COUNT(*) FROM models WHERE name = ?",
-                    (model_name,)
+                    "SELECT COUNT(*) FROM models WHERE name = ?", (model_name,)
                 )
                 count = cursor.fetchone()[0]
                 return count > 0
@@ -231,7 +227,9 @@ class DatabaseManager:
             logger.error(f"Failed to list models: {e}")
             raise DatabaseError(f"Failed to list models: {e}")
 
-    def query_models(self, filters: Optional[Dict[str, Any]] = None) -> List[ModelSchema]:
+    def query_models(
+        self, filters: Optional[Dict[str, Any]] = None
+    ) -> List[ModelSchema]:
         """
         查询模型（支持筛选）
 
@@ -249,25 +247,27 @@ class DatabaseManager:
             params = []
 
             if filters:
-                if 'provider' in filters:
+                if "provider" in filters:
                     conditions.append("provider = ?")
-                    params.append(filters['provider'])
+                    params.append(filters["provider"])
 
-                if 'min_code_score' in filters:
+                if "min_code_score" in filters:
                     conditions.append("code_score >= ?")
-                    params.append(filters['min_code_score'])
+                    params.append(filters["min_code_score"])
 
-                if 'specialty' in filters:
+                if "specialty" in filters:
                     # SQLite的LIKE查询
                     conditions.append(
                         "(specialties LIKE ? OR specialties LIKE ? OR specialties LIKE ?)"
                     )
-                    specialty = filters['specialty']
-                    params.extend([
-                        f"{specialty},%",  # 开头
-                        f"%,{specialty},%",  # 中间
-                        f"%,{specialty}"  # 结尾
-                    ])
+                    specialty = filters["specialty"]
+                    params.extend(
+                        [
+                            f"{specialty},%",  # 开头
+                            f"%,{specialty},%",  # 中间
+                            f"%,{specialty}",  # 结尾
+                        ]
+                    )
 
             sql = "SELECT * FROM models"
             if conditions:
@@ -292,7 +292,7 @@ class DatabaseManager:
         Returns:
             Dict[str, int]: 统计信息 {'imported': N, 'skipped': M, 'errors': K}
         """
-        stats = {'imported': 0, 'skipped': 0, 'errors': 0}
+        stats = {"imported": 0, "skipped": 0, "errors": 0}
 
         for model_data in models:
             try:
@@ -303,16 +303,16 @@ class DatabaseManager:
                 # 检查是否已存在
                 if self.model_exists(model.name):
                     logger.debug(f"Model {model.name} already exists, skipping")
-                    stats['skipped'] += 1
+                    stats["skipped"] += 1
                     continue
 
                 # 插入
                 self.insert_model(model)
-                stats['imported'] += 1
+                stats["imported"] += 1
 
             except Exception as e:
                 logger.error(f"Failed to import model: {e}")
-                stats['errors'] += 1
+                stats["errors"] += 1
 
         logger.info(
             f"Batch import completed: {stats['imported']} imported, "

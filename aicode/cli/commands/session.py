@@ -1,10 +1,12 @@
 """
 session 命令 - 管理对话会话
 """
+
 import argparse
-from aicode.llm.session import SessionManager
+
 from aicode.cli.utils.output import Output
 from aicode.llm.exceptions import ConfigError
+from aicode.llm.session import SessionManager
 from aicode.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -21,30 +23,34 @@ def setup_parser(subparsers) -> argparse.ArgumentParser:
         ArgumentParser: session命令的解析器
     """
     parser = subparsers.add_parser(
-        'session',
-        help='Manage chat sessions',
-        description='List, show, or delete conversation sessions'
+        "session",
+        help="Manage chat sessions",
+        description="List, show, or delete conversation sessions",
     )
 
-    session_subparsers = parser.add_subparsers(dest='session_command', help='Session commands')
+    session_subparsers = parser.add_subparsers(
+        dest="session_command", help="Session commands"
+    )
 
     # list 子命令
-    list_parser = session_subparsers.add_parser('list', help='List all sessions')
+    list_parser = session_subparsers.add_parser("list", help="List all sessions")
     list_parser.set_defaults(func=execute_list)
 
     # show 子命令
-    show_parser = session_subparsers.add_parser('show', help='Show session details')
-    show_parser.add_argument('session_id', type=str, help='Session ID')
-    show_parser.add_argument('-n', '--num-messages', type=int, help='Number of messages to show')
+    show_parser = session_subparsers.add_parser("show", help="Show session details")
+    show_parser.add_argument("session_id", type=str, help="Session ID")
+    show_parser.add_argument(
+        "-n", "--num-messages", type=int, help="Number of messages to show"
+    )
     show_parser.set_defaults(func=execute_show)
 
     # delete 子命令
-    delete_parser = session_subparsers.add_parser('delete', help='Delete a session')
-    delete_parser.add_argument('session_id', type=str, help='Session ID')
+    delete_parser = session_subparsers.add_parser("delete", help="Delete a session")
+    delete_parser.add_argument("session_id", type=str, help="Session ID")
     delete_parser.set_defaults(func=execute_delete)
 
     # clear 子命令
-    clear_parser = session_subparsers.add_parser('clear', help='Clear all sessions')
+    clear_parser = session_subparsers.add_parser("clear", help="Clear all sessions")
     clear_parser.set_defaults(func=execute_clear)
 
     parser.set_defaults(func=lambda args: parser.print_help())
@@ -63,20 +69,26 @@ def execute_list(args: argparse.Namespace) -> int:
             return 0
 
         # 准备表格数据
-        headers = ['ID', 'Title', 'Model', 'Messages', 'Updated']
+        headers = ["ID", "Title", "Model", "Messages", "Updated"]
         rows = []
 
         for session in sessions:
             # 格式化时间（只显示日期和时间）
-            updated = session.updated_at[:19].replace('T', ' ')
+            updated = session.updated_at[:19].replace("T", " ")
 
-            rows.append([
-                session.session_id,
-                session.title[:30] + '...' if len(session.title) > 30 else session.title,
-                session.model,
-                str(session.get_message_count()),
-                updated
-            ])
+            rows.append(
+                [
+                    session.session_id,
+                    (
+                        session.title[:30] + "..."
+                        if len(session.title) > 30
+                        else session.title
+                    ),
+                    session.model,
+                    str(session.get_message_count()),
+                    updated,
+                ]
+            )
 
         Output.print_table(headers, rows)
         Output.print_info(f"Total: {len(sessions)} session(s)")
@@ -109,7 +121,7 @@ def execute_show(args: argparse.Namespace) -> int:
 
         # 确定显示多少条消息
         if args.num_messages:
-            messages = session.messages[-args.num_messages:]
+            messages = session.messages[-args.num_messages :]
             if len(session.messages) > args.num_messages:
                 Output.print_info(f"Showing last {args.num_messages} messages")
         else:
@@ -117,12 +129,12 @@ def execute_show(args: argparse.Namespace) -> int:
 
         # 显示每条消息
         for i, msg in enumerate(messages, 1):
-            role = msg['role'].upper()
-            content = msg['content']
+            role = msg["role"].upper()
+            content = msg["content"]
 
-            if role == 'USER':
+            if role == "USER":
                 Output.print_info(f"\n[{role}]")
-            elif role == 'ASSISTANT':
+            elif role == "ASSISTANT":
                 Output.print_success(f"\n[{role}]")
             else:
                 Output.print_warning(f"\n[{role}]")
@@ -130,7 +142,9 @@ def execute_show(args: argparse.Namespace) -> int:
             print(content)
 
         Output.print_separator()
-        Output.print_info("Use 'aicode chat --session <id>' to continue this conversation")
+        Output.print_info(
+            "Use 'aicode chat --session <id>' to continue this conversation"
+        )
         return 0
 
     except ConfigError as e:
@@ -195,7 +209,7 @@ def execute(args: argparse.Namespace) -> int:
     Returns:
         int: 退出码
     """
-    if hasattr(args, 'func') and args.func != execute:
+    if hasattr(args, "func") and args.func != execute:
         return args.func(args)
     else:
         Output.print_error("Please specify a subcommand: list, show, delete, or clear")
