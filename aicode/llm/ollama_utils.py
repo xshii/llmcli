@@ -3,8 +3,9 @@ Ollama 工具函数
 提供 Ollama 模型管理功能
 """
 
-import httpx
 from typing import Dict, List, Optional
+
+import httpx
 
 from aicode.utils.logger import get_logger
 
